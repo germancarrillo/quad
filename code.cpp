@@ -1,9 +1,9 @@
-#define maxT 1625        // throttle limtis: esc+motors max 168   
-#define minT 1580        // throttle limits: min 158 to start propellers  
+#define maxT 1625        // throttle limtis: esc+motors max 1680   
+#define minT 1580        // throttle limits: min 1580 to start propellers  
 
 #define limT 1660
 
-#define tolerance 2.0   // stability tolerance in degrees
+#define tolerance 1.0   // stability tolerance in degrees
 
 //#define OUTPUT_READABLE_QUATERNION
 #define OUTPUT_READABLE_YAWPITCHROLL
@@ -12,7 +12,7 @@
 
 #define size   10  
 
-double yaw0,pitch0,roll0;
+double yaw0,pitch0,roll0;                                // initial angles offset - horizontal  
 
 FILE *pFile;
 
@@ -20,23 +20,20 @@ using namespace std;
 
 int main(){
   
-  system("i2cdetect -y 1");        // scanning address for i2c protocol
-  setup_mpu();                     // giro & accelerometer setup
-  usleep(500000);                  // sleep 0.5s  
-  loop_mpu(&yaw0,&pitch0,&roll0);  usleep(500000); // starting values (twice) must be in a horizontal position  
-  if(loop_mpu(&yaw0,&pitch0,&roll0)) std::cout<<std::endl<<std::endl<<"INFO: Reading initial angles::: yaw0:"<<yaw0<<" pitch0:"<<pitch0<<" roll0:"<<roll0<<std::endl; 
-  else{ std::cout<<"FATAL: mpu: failed to retrieve angles, can't continue!"<<std::endl; return 0; }
-  
-  Quad *quad = new Quad();                  // class QUAD position, orientation, effective and angular speeds etc...
-  std::vector<Pupdate> P;  P.clear();       // position track -> to be used later 
-
-  system("/root/code/servoblaster/servod"); // sourcing ServoBlaster for pulse width control
-  
+  //
+  if(!setup_orientaion())return 0; 
+  //
+  if(!setup_pwm())return 0; 
+  //
+  Quad *quad = new Quad();                  // class QUAD to manage position, orientation, velocity, angular speeds etc...
+  //
+  std::vector<Pupdate> P;  P.clear();       // position track 
+    
   quad->InitMotors();                       // start motors pulse 1500us  
   
   for(uint p=minT;p<=maxT;p++){              // ramp up throttle 
     Pupdate position;  
-    std::cout<<"INFO: Starting -> Throttle at "<<int((p-1580)*100.)<<"%  pulse width:"<<p<<std::endl;
+    std::cout<<"INFO: Starting -> Throttle at "<<int((p-1580))<<"%  pulse width:"<<p<<std::endl;
     quad->ThrottleAll(p);                   // throttle from 1580 to 1680us 
     usleep(200000);                         // in microseconds
   }
@@ -116,38 +113,50 @@ void  Quad::ThrottleAll(int throttle){
   std::cout<<"-----------------"<<std::endl;
 }
 
-void  Quad::Stabilise(float timeS){
+void  Quad::Stabilise(float timeS){   // PID
 
-  double Delta_pitch=0, Delta_roll=0; 
-  
   for(float st=0; st<timeS; st+=0.1){
     
     std::cout<<"INFO: Stabilising Quad"<<std::endl;
     uint readfail=0;
     
+    uint dt=1; double Kp=0.1, Ki=0.1, Kd=0.1;
+    
+    double pitch_error=0, pitch_error_old=0, pitch_derivative=0, pitch_output=0, pitch_integral=0;
+    double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
+    double yaw_error=0,   yaw_error_old=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
+    
     while(1)
       if(loop_mpu(&yaw,&pitch,&roll)){
 	
-	Delta_pitch = pitch-pitch0;  Delta_roll  = roll-roll0;
+	pitch_error      = pitch0 - pitch < tolerance? pitch0 - pitch :0;
+	pitch_integral   = pitch_integral + pitch_error*dt;
+	pitch_derivative = (pitch_error - pitch_error_old)/dt;
+	pitch_output     = int(Kp*pitch_error + Ki*pitch_integral + Kd*pitch_derivative);	
+	pitch_error_old  = pitch_error;
+
+	roll_error      = roll0 - roll < tolerance? pitch0 - pitch :0;
+	roll_integral   = roll_integral + roll_error*dt;
+	roll_derivative = (roll_error - roll_error_old)/dt;
+	roll_output     = int(Kp*roll_error + Ki*roll_integral + Kd*roll_derivative);	
+	roll_error_old  = roll_error;
+
+	yaw_error      = yaw0 - yaw < tolerance? pitch0 - pitch :0;
+	yaw_integral   = yaw_integral + yaw_error*dt;
+	yaw_derivative = (yaw_error - yaw_error_old)/dt;
+	yaw_output     = int(Kp*yaw_error + Ki*yaw_integral + Kd*yaw_derivative);	
+	yaw_error_old  = yaw_error;
+
+	std::cout<<"INFO: Pitch Roll and Yaw        :"<<pitch_error <<" \t "<<roll_error <<" \t "<<yaw_error <<std::endl; 
+	std::cout<<"INFO: Pitch Roll and Yaw Outputs:"<<pitch_output<<" \t "<<roll_output<<" \t "<<yaw_output<<std::endl; 
+
+	Quad::Throttle(1,N_t-pitch_output); Quad::Throttle(3,S_t+pitch_output);
+	Quad::Throttle(2,E_t-roll_output);  Quad::Throttle(4,W_t+roll_output);
+	// 
+      //Quad::Throttle(1,N_t+yaw_output);   Quad::Throttle(3,S_t+yaw_output);
+      //Quad::Throttle(2,E_t-yaw_output);   Quad::Throttle(4,W_t-yaw_output);
 	
-	if(fabs(Delta_pitch) < tolerance && fabs(Delta_roll ) < tolerance) break;	
-	else{	  
-	  std::cout<<"INFO: Roll and Pitch:"<<Delta_roll<<" \t "<<Delta_pitch<<std::endl; 
-	  
-	  if(Delta_pitch >=  tolerance){Quad::Throttle(1,N_t<limT-1?N_t+1:N_t); Quad::Throttle(3,S_t>minT?S_t-1:S_t); }
-	  if(Delta_pitch <= -tolerance){Quad::Throttle(3,S_t<limT-1?S_t+1:S_t); Quad::Throttle(1,N_t>minT?N_t-1:N_t); }
-	  if(Delta_roll  <= -tolerance){Quad::Throttle(2,E_t<limT-1?E_t+1:E_t); Quad::Throttle(4,W_t>minT?W_t-1:W_t); }
-	  if(Delta_roll  >=  tolerance){Quad::Throttle(4,W_t<limT-1?W_t+1:W_t); Quad::Throttle(2,E_t>minT?E_t-1:E_t); }
-	  
-	  //usleep(20000);
-	  
-	  /*
-	  if(Delta_pitch >=  tolerance){Quad::Throttle(1,N_t-3); Quad::Throttle(3,S_t+3); }
-	  if(Delta_pitch <= -tolerance){Quad::Throttle(3,S_t-3); Quad::Throttle(1,N_t+3); }
-	  if(Delta_roll  <= -tolerance){Quad::Throttle(2,E_t-3); Quad::Throttle(4,W_t+3); }
-	  if(Delta_roll  >=  tolerance){Quad::Throttle(4,W_t-3); Quad::Throttle(2,E_t+3); }	  
-	  */
-	}
+	usleep(dt*1000);
       }else{
 	readfail++;
 	if(readfail>10){ std::cout<<"ERROR: Can't read mpu, failed to stabilise!"<<std::endl;  break; } 
@@ -156,6 +165,25 @@ void  Quad::Stabilise(float timeS){
   std::cout<<"-----------------"<<std::endl;  
 }
 ////////////////////////////////////////////////////////////////////////////
+
+bool setup_pwm(){
+  if(true){ 
+    std::cout<<std::endl<<std::endl<<"INFO: Invoking ServoBlaster"<<std::endl;   
+    system("/root/code/servoblaster/servod"); // sourcing ServoBlaster for pulse width control
+  }
+  else{ std::cout<<"FATAL: mpu: failed to retrieve angles, can't continue!"<<std::endl; return 0; }
+  return 1;
+};
+
+bool setup_orientaion(){
+  system("echo i2cdetect -y 1; i2cdetect -y 1");         // scanning address for i2c protocol
+  setup_mpu();                                           // giro & accelerometer setup
+  usleep(500000);                                        // sleep 0.5s  
+  loop_mpu(&yaw0,&pitch0,&roll0);  usleep(500000);       // starting values (twice) must be in a horizontal position  
+  if(loop_mpu(&yaw0,&pitch0,&roll0)) std::cout<<std::endl<<std::endl<<"INFO: Reading initial angles::: yaw0:"<<yaw0<<" pitch0:"<<pitch0<<" roll0:"<<roll0<<std::endl; 
+  else{ std::cout<<"FATAL: mpu: failed to retrieve angles, can't continue!"<<std::endl; return 0; }
+  return 1;
+};
 
 void setup_mpu() {
   // initialize device

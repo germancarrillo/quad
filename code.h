@@ -34,6 +34,9 @@ VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
+//
+bool setup_pwm();
+bool setup_orientaion();
 void setup_mpu();
 bool loop_mpu(double *yaw,double *pitch,double *roll);
 int  read_mpu();
