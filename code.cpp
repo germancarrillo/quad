@@ -5,11 +5,11 @@
 #define max_allowed_T 1660 // max-allowed Throttle
 #define tolerance 2.0   // stability tolerance in degrees
 #define OUTPUT_READABLE_YAWPITCHROLL
-#define size 10  
 #define S 0
 #define W 4
 #define E 5
 #define N 7 
+#define printlog true
 
 double yaw0,pitch0,roll0;                                // initial angles offset - horizontal  
 using namespace std;
@@ -29,15 +29,15 @@ int main(){
   for(uint p=min_spin_T;p<=take_off_T;p++){              // ramp up throttle 
     std::cout<<"INFO: Starting -> Throttle at "<<int((p-1580))<<"%  pulse width:"<<p<<std::endl;
     quad->ThrottleAll(p);                   // throttle from 1580 to 1680us 
-    usleep(200000);                         // in microseconds
+    if(p<=take_off_T-4) usleep(50000); 
   }
 
-  usleep(1000000); 
-  quad->ThrottleAllplusplus();
-  quad->Stabilise(1,0.1,0.1,0.1); // (t,Kp,Ki,Kd)   
+  quad->Stabilise(2,0.5,0.0,0.0); // (t,Kp,Ki,Kd)   
+  // quad->Stabilise(2,0.1,0.1,0.1); // (t,Kp,Ki,Kd)   
+  // quad->Stabilise(2,0.1,0.1,0.1); // (t,Kp,Ki,Kd)   
 
   for(uint p=quad->GetThrottle();p>=min_spin_T;p-=10){  // ramp down throttle 
-    std::cout<<"INFO: Stopping -> Throttle at "<<int((p-1580)*100.)<<"%  pulse width:"<<p<<std::endl;
+    std::cout<<"INFO: Stopping -> Throttle at "<<p<<std::endl;
     quad->ThrottleAll(p);
     usleep(500000);                         // in microseconds
   }
@@ -46,6 +46,7 @@ int main(){
 
   delete quad;
   myfile.close();
+  logfile.close();
   std::cout<<"-- DONE --"<<std::endl;
   return 0;
 }
@@ -56,24 +57,14 @@ void  Quad::Throttle(uint motorID,int throttle){
   if(throttle>max_allowed_T){ std::cout<<"ERROR: max throttle excceed"<<std::endl; return;}
   myfile <<motorID<<"="<<throttle; myfile.seekp(0);
   
-  double percentage_N=(N_t-min_spin_T)/(max_allowed_T-min_spin_T);
-  double percentage_S=(S_t-min_spin_T)/(max_allowed_T-min_spin_T);
-  double percentage_E=(E_t-min_spin_T)/(max_allowed_T-min_spin_T);
-  double percentage_W=(W_t-min_spin_T)/(max_allowed_T-min_spin_T);
-  
-  //logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<percentage_N<<" "<<percentage_S<<" "<<percentage_E<<" "<<percentage_W<<std::endl;
-  logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<std::endl;
-
-}
-
-void  Quad::InitMotors(){
-  Quad::ThrottleAll(0);
-  Quad::ThrottleAll(1500);
-  usleep(1000000);
-}
-
-void  Quad::StopMotors(){
-  Quad::ThrottleAll(0);
+  if(printlog){
+    double percentage_N=(N_t-min_spin_T)/(max_allowed_T-min_spin_T);
+    double percentage_S=(S_t-min_spin_T)/(max_allowed_T-min_spin_T);
+    double percentage_E=(E_t-min_spin_T)/(max_allowed_T-min_spin_T);
+    double percentage_W=(W_t-min_spin_T)/(max_allowed_T-min_spin_T);
+    //logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<percentage_N<<" "<<percentage_S<<" "<<percentage_E<<" "<<percentage_W<<std::endl;
+    logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<std::endl; 
+  }
 }
 
 void  Quad::ThrottleAllplusplus(){
@@ -90,6 +81,17 @@ void  Quad::ThrottleAll(int throttle){
   Quad::Throttle(W,throttle); 
 }
 
+void  Quad::InitMotors(){
+  Quad::ThrottleAll(0);
+  Quad::ThrottleAll(1500);
+  usleep(1000000);
+}
+
+void  Quad::StopMotors(){
+  Quad::ThrottleAll(0);
+  usleep(200000);
+}
+
 void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
   for(float st=0; st<timeS; st+=0.1){
     uint readfail=0;
@@ -98,6 +100,50 @@ void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
     double pitch_error=0, pitch_error_old=0, pitch_derivative=0, pitch_output=0, pitch_integral=0;
     double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
     double yaw_error=0,   yaw_error_old=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
+
+    loop_mpu(&yaw,&pitch,&roll);
+
+    while(fabs(pitch0 - pitch) > tolerance || fabs(roll0 - roll) > tolerance
+)
+      if(loop_mpu(&yaw,&pitch,&roll)){
+	
+	pitch_error      = fabs(pitch0 - pitch) > tolerance? pitch0 - pitch :0;
+	pitch_integral   = pitch_integral + pitch_error*dt;
+	pitch_derivative = (pitch_error - pitch_error_old)/dt;
+	pitch_output     = int(Kp*pitch_error + Ki*pitch_integral + Kd*pitch_derivative);	
+	pitch_error_old  = pitch_error;
+
+	roll_error      = fabs(roll0 - roll) > tolerance? roll0 - roll :0;
+	roll_integral   = roll_integral + roll_error*dt;
+	roll_derivative = (roll_error - roll_error_old)/dt;
+	roll_output     = int(Kp*roll_error + Ki*roll_integral + Kd*roll_derivative);	
+	roll_error_old  = roll_error;
+
+	yaw_error      = fabs(yaw0 - yaw) > tolerance? yaw0 - yaw :0;
+	yaw_integral   = yaw_integral + yaw_error*dt;
+	yaw_derivative = (yaw_error - yaw_error_old)/dt;
+	yaw_output     = int(Kp*yaw_error + Ki*yaw_integral + Kd*yaw_derivative);	
+	yaw_error_old  = yaw_error;
+
+	std::cout.precision(3);
+	std::cout<<"INFO: Pitch Roll and Yaw        :"<<pitch_error <<" \t "<<roll_error <<" \t "<<yaw_error <<std::endl; 
+	std::cout<<"INFO: Pitch Roll and Yaw Outputs:"<<pitch_output<<" \t "<<roll_output<<" \t "<<yaw_output<<std::endl; 
+
+	Quad::ThrottleStabilising(2,-pitch_output); Quad::ThrottleStabilising(4, pitch_output);	
+	Quad::ThrottleStabilising(1, roll_output);  Quad::ThrottleStabilising(3,-roll_output);
+	
+	//Quad::Throttle(1,N_t+yaw_output);   Quad::Throttle(3,S_t+yaw_output);
+	//Quad::Throttle(2,E_t-yaw_output);   Quad::Throttle(4,W_t-yaw_output);
+	
+	//usleep(dt);
+	
+
+      }else{
+	readfail++;
+	if(readfail>10){ std::cout<<"ERROR: Can't read mpu, failed to stabilise!"<<std::endl;  break; } 
+      }
+  }
+
 
     while(1)
       if(loop_mpu(&yaw,&pitch,&roll)){
@@ -108,13 +154,13 @@ void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
 	pitch_output     = int(Kp*pitch_error + Ki*pitch_integral + Kd*pitch_derivative);	
 	pitch_error_old  = pitch_error;
 
-	roll_error      = roll0 - roll < tolerance? pitch0 - pitch :0;
+	roll_error      = roll0 - roll < tolerance? roll0 - roll :0;
 	roll_integral   = roll_integral + roll_error*dt;
 	roll_derivative = (roll_error - roll_error_old)/dt;
 	roll_output     = int(Kp*roll_error + Ki*roll_integral + Kd*roll_derivative);	
 	roll_error_old  = roll_error;
 
-	yaw_error      = yaw0 - yaw < tolerance? pitch0 - pitch :0;
+	yaw_error      = yaw0 - yaw < tolerance? yaw0 - yaw :0;
 	yaw_integral   = yaw_integral + yaw_error*dt;
 	yaw_derivative = (yaw_error - yaw_error_old)/dt;
 	yaw_output     = int(Kp*yaw_error + Ki*yaw_integral + Kd*yaw_derivative);	
