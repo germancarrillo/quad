@@ -19,7 +19,7 @@ void XYquad(){
   data>>text>>Kp>>Ki>>Kd;	
 
   string title = "Configuration Kp:"+Kp+" Ki:"+Ki+" Kd:"+Kd;	
-  
+  	 
   int k = 0;
 
   while(!data.eof() && k<n){
@@ -81,7 +81,9 @@ void XYquad(){
     grp_W->GetXaxis()->SetTitle("t (A.U.)"); grp_W->GetYaxis()->SetTitle("W(pulse)");
     grp_W->Draw("AP");
 
-    Ca0->SaveAs("XYquad.png");
+    string image_name = "XYquad_Kp_"+Kp+"Ki_"+Ki+"Kd_"+Kd+".png";	
+
+    Ca0->SaveAs(image_name.c_str());
     exit (0);
             
 }

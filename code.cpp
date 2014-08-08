@@ -160,8 +160,8 @@ void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
 	std::cout<<"INFO: Pitch Roll and Yaw        :"<<pitch_error <<" \t "<<roll_error <<" \t "<<yaw_error <<std::endl; 
 	std::cout<<"INFO: Pitch Roll and Yaw Outputs:"<<pitch_output<<" \t "<<roll_output<<" \t "<<yaw_output<<std::endl; 
 
-	Quad::Throttle(N,N_t+pitch_output); Quad::Throttle(S,S_t-pitch_output);
-	Quad::Throttle(E,E_t+roll_output);  Quad::Throttle(W,W_t-roll_output);
+	Quad::Throttle(N,take_off_T+pitch_output); Quad::Throttle(S,take_off_T-pitch_output);
+	Quad::Throttle(E,take_off_T+roll_output);  Quad::Throttle(W,take_off_T-roll_output);
 		
       }else{
 	readfail++;

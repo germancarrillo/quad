@@ -1,1 +1,0 @@
-g++ -Wall -W -Werror writing.cpp -o write
