@@ -69,6 +69,7 @@ void  Quad::Throttle(uint motorID,int throttle){
 void  Quad::InitMotors(){
   Quad::ThrottleAll(0);
   Quad::ThrottleAll(1500);
+  usleep(1000000);
 }
 
 void  Quad::StopMotors(){
