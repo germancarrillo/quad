@@ -9,7 +9,7 @@
 
 
 void XYquad(){
-  const int n = 1436;	
+  const int n = 362;	
   float t[n],roll[n], pitch[n], yaw[n], N[n],S[n],E[n],W[n];
   string text;
   ifstream data;
@@ -52,28 +52,28 @@ void XYquad(){
     Ca0_3->cd();
     grp_N->SetTitle("N");  grp_N->SetLineColor(kRed);
     grp_N->SetMarkerStyle(20);  grp_N->SetMarkerSize(0.7);
-    grp_N->SetMinimum(0.0);  grp_N->SetMaximum(max_allowed_T);
+    grp_N->SetMinimum(min_spin_T);  grp_N->SetMaximum(max_allowed_T);
     grp_N->GetXaxis()->SetTitle("t (A.U.)"); grp_N->GetYaxis()->SetTitle("N(pulse)");
     grp_N->Draw("AP");
 
     Ca0_4->cd();
     grp_E->SetTitle("E");  grp_E->SetLineColor(kRed);
     grp_E->SetMarkerStyle(20);  grp_E->SetMarkerSize(0.7);
-    grp_E->SetMinimum(0.0);  grp_E->SetMaximum(max_allowed_T);
+    grp_E->SetMinimum(min_spin_T);  grp_E->SetMaximum(max_allowed_T);
     grp_E->GetXaxis()->SetTitle("t (A.U.)"); grp_E->GetYaxis()->SetTitle("E(pulse)");
     grp_E->Draw("AP");
 
     Ca0_5->cd();
     grp_S->SetTitle("S");  grp_S->SetLineColor(kRed);
     grp_S->SetMarkerStyle(20);  grp_S->SetMarkerSize(0.7);
-    grp_S->SetMinimum(0.0);  grp_S->SetMaximum(max_allowed_T);
+    grp_S->SetMinimum(min_spin_T);  grp_S->SetMaximum(max_allowed_T);
     grp_S->GetXaxis()->SetTitle("t (A.U.)"); grp_S->GetYaxis()->SetTitle("S(pulse)");
     grp_S->Draw("AP");
 
     Ca0_6->cd();
     grp_W->SetTitle("W");  grp_W->SetLineColor(kRed);
     grp_W->SetMarkerStyle(20);  grp_W->SetMarkerSize(0.7);
-    grp_W->SetMinimum(0.0);  grp_W->SetMaximum(max_allowed_T);
+    grp_W->SetMinimum(min_spin_T);  grp_W->SetMaximum(max_allowed_T);
     grp_W->GetXaxis()->SetTitle("t (A.U.)"); grp_W->GetYaxis()->SetTitle("W(pulse)");
     grp_W->Draw("AP");
 
