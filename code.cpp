@@ -12,10 +12,10 @@
 #define N 7 
 
 double yaw0,pitch0,roll0;                                // initial angles offset - horizontal  
+using namespace std;
+
 ofstream myfile;
 ofstream logfile;
-
-using namespace std;
 
 int main(){
   if(!setup_orientaion())return 0; 
@@ -34,7 +34,7 @@ int main(){
 
   usleep(1000000); 
   quad->ThrottleAllplusplus();
-  quad->Stabilise(1,0.1,0.1,0.1) // (t,Kp,Ki,Kd)   
+  quad->Stabilise(1,0.1,0.1,0.1); // (t,Kp,Ki,Kd)   
 
   for(uint p=quad->GetThrottle();p>=min_spin_T;p-=10){  // ramp down throttle 
     std::cout<<"INFO: Stopping -> Throttle at "<<int((p-1580)*100.)<<"%  pulse width:"<<p<<std::endl;
@@ -55,6 +55,15 @@ float differecnce(float Ax,float Ay,float Bx,float By){return 1;}
 void  Quad::Throttle(uint motorID,int throttle){
   if(throttle>max_allowed_T){ std::cout<<"ERROR: max throttle excceed"<<std::endl; return;}
   myfile <<motorID<<"="<<throttle; myfile.seekp(0);
+  
+  double percentage_N=(N_t-min_spin_T)/(max_allowed_T-min_spin_T);
+  double percentage_S=(S_t-min_spin_T)/(max_allowed_T-min_spin_T);
+  double percentage_E=(E_t-min_spin_T)/(max_allowed_T-min_spin_T);
+  double percentage_W=(W_t-min_spin_T)/(max_allowed_T-min_spin_T);
+  
+  //logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<percentage_N<<" "<<percentage_S<<" "<<percentage_E<<" "<<percentage_W<<std::endl;
+  logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<std::endl;
+
 }
 
 void  Quad::InitMotors(){
@@ -85,11 +94,6 @@ void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
     uint readfail=0;
     uint dt=1; 
 
-    double percentage_N;
-    double percentage_S;
-    double percentage_E;
-    double percentage_W;
-    
     double pitch_error=0, pitch_error_old=0, pitch_derivative=0, pitch_output=0, pitch_integral=0;
     double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
     double yaw_error=0,   yaw_error_old=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
@@ -119,13 +123,6 @@ void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
 	Quad::Throttle(E,E_t-roll_output);  Quad::Throttle(W,W_t+roll_output);
 	usleep(dt*1000);
 	
-        percentage_N=((N_t-pitch_output)-min_spin_T)/(max_allowed_T-min_spin_T);
-        percentage_S=((S_t+pitch_output)-min_spin_T)/(max_allowed_T-min_spin_T);
-        percentage_E=((E_t-roll_output)-min_spin_T)/(max_allowed_T-min_spin_T);
-        percentage_W=((W_t+roll_output)-min_spin_T)/(max_allowed_T-min_spin_T);
-        
-	logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<percentage_N<<" "<<percentage_S<<" "<<percentage_E<<" "<<percentage_W;
-
       }else{
 	readfail++;
 	if(readfail>10){ std::cout<<"ERROR: Can't read mpu, failed to stabilise!"<<std::endl;  break; } 
