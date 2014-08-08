@@ -67,8 +67,6 @@ class Quad{             // Quad class
   double pitch;             
   double roll;
 
-  uint mean_t;        // mean throttle
-
  public:
   Quad();
   virtual ~Quad(){ }
@@ -79,7 +77,9 @@ class Quad{             // Quad class
   void ThrottleAllplusplus();
   void Stabilise(float timeS,double Kp,double Ki,double Kd);
 
-  uint GetThrottle(){ return mean_t;};
+  uint GetMeanThrottle(){ 
+    return int((N_t+E_t+S_t+W_t)*0.25);
+  };
 
   uint N_t;           // effective throttle for each motor          
   uint E_t;
@@ -90,7 +90,7 @@ class Quad{             // Quad class
 Quad::Quad(){
   x=0; y=0; z=0; 
   yaw=0; pitch=0; roll=0;
-  mean_t=0; N_t=0; E_t=0; S_t=0; W_t=0; 
+  N_t=0; E_t=0; S_t=0; W_t=0; 
 }
 
 float difference(float Ax,float Ay,float Bx,float By);
