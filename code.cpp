@@ -9,13 +9,13 @@
 #define W 4
 #define E 5
 #define N 7 
-#define printlog true
 
 double yaw0,pitch0,roll0;                                // initial angles offset - horizontal  
 using namespace std;
 
 ofstream myfile;
 ofstream logfile;
+bool ramped_up = false;
 
 int main(){
   if(!setup_orientaion())return 0; 
@@ -55,6 +55,7 @@ float differecnce(float Ax,float Ay,float Bx,float By){return 1;}
 
 void  Quad::Throttle(uint motorID,int throttle){
   if(throttle>max_allowed_T){ std::cout<<"ERROR: max throttle excceed"<<std::endl; return;}
+  if(throttle<(min_spin_T+10)){ std::cout<<"ERROR: max throttle excceed"<<std::endl; return;}
   myfile <<motorID<<"="<<throttle; myfile.seekp(0);
   
   if(printlog){
@@ -82,31 +83,19 @@ void  Quad::ThrottleAll(int throttle){
 }
 
 void  Quad::InitMotors(){
+  ramping=true;
   Quad::ThrottleAll(0);
   Quad::ThrottleAll(1500);
+  ramping=false;
   usleep(1000000);
 }
 
 void  Quad::StopMotors(){
+  ramping=true;
   Quad::ThrottleAll(0);
+  ramping=false;
   usleep(200000);
 }
-
-void  Quad::ThrottleStabilising(uint motorID,int throttlediff){
-  char M_string_ID=M_string[motorID-1];
-  uint throttle=0;
-  if(     motorID==1){ motorID=0; throttle=N_t+throttlediff; } // N 1
-  else if(motorID==2){ motorID=4; throttle=E_t+throttlediff; } // E 2
-  else if(motorID==3){ motorID=7; throttle=S_t+throttlediff; } // S 3
-  else if(motorID==4){ motorID=5; throttle=W_t+throttlediff; } // W 4  
-  std::cout<<"INFO: Motor"<<motorID<<", "<<M_string_ID<<"->"<<throttle<<std::endl;
-  if(throttle>limT){ std::cout<<"ERROR: max throttle excceed"<<std::endl;  return;}
-  if(throttle==0)  { std::cout<<"ERROR: throttle unset, incorrect morotID"<<std::endl;  return;}
-  pFile = fopen ("/dev/servoblaster","w");
-  fprintf(pFile,"%d=%d\n",motorID,throttle);
-  fclose(pFile);
-}
-
 
 void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
   for(float st=0; st<timeS; st+=0.1){
@@ -145,18 +134,9 @@ void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
 	std::cout<<"INFO: Pitch Roll and Yaw        :"<<pitch_error <<" \t "<<roll_error <<" \t "<<yaw_error <<std::endl; 
 	std::cout<<"INFO: Pitch Roll and Yaw Outputs:"<<pitch_output<<" \t "<<roll_output<<" \t "<<yaw_output<<std::endl; 
 
-	Quad::ThrottleStabilising(2,-pitch_output); Quad::ThrottleStabilising(4, pitch_output);	
-	Quad::ThrottleStabilising(1, roll_output);  Quad::ThrottleStabilising(3,-roll_output);
-
 	Quad::Throttle(N,N_t-pitch_output); Quad::Throttle(S,S_t+pitch_output);
 	Quad::Throttle(E,E_t-roll_output);  Quad::Throttle(W,W_t+roll_output);
-	
-	//Quad::Throttle(1,N_t+yaw_output);   Quad::Throttle(3,S_t+yaw_output);
-	//Quad::Throttle(2,E_t-yaw_output);   Quad::Throttle(4,W_t-yaw_output);
-	
-	//usleep(dt);
-	
-
+		
       }else{
 	readfail++;
 	if(readfail>10){ std::cout<<"ERROR: Can't read mpu, failed to stabilise!"<<std::endl;  break; } 
