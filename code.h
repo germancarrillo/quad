@@ -72,8 +72,8 @@ class Quad{             // Quad class
   virtual ~Quad(){ }
   void InitMotors();
   void StopMotors();
-  void Throttle(uint motorID,int throttle);
-  void ThrottleAll(int throttle);
+  void Throttle(uint motorID,uint throttle);
+  void ThrottleAll(uint throttle);
   void ThrottleAllplusplus();
   void Stabilise(float timeS,double Kp,double Ki,double Kd);
 

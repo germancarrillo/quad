@@ -11,11 +11,19 @@
 #define N 7 
 #define printlog true
 
+
 double yaw0,pitch0,roll0;                                // initial angles offset - horizontal  
 using namespace std;
 
 ofstream myfile;
 ofstream logfile;
+FILE *pFile;
+
+double Kp=0.01;
+double Ki=0.0;
+double Kd=0.0;
+  
+
 bool ramping = false;
 
 int main(){
@@ -23,11 +31,15 @@ int main(){
   if(!setup_pwm())return 0; 
   Quad *quad = new Quad();                  // class QUAD to manage position, orientation, velocity, angular speeds etc...
   
-  myfile.open("/dev/servoblaster");
+  //myfile.open("/dev/servoblaster"); myfile.seekp(0);
+  //myfile.open("/tmp/servoblaster"); myfile.seekp(0);
+  
   logfile.open("log.txt");
 
-  quad->InitMotors();                       // start motors pulse 1500us  
+  logfile<<"Conf: "<<Kp<<" "<<Ki<<" "<<Kd<<endl;
   
+  quad->InitMotors();                       // start motors pulse 1500us  
+
   ramping=true;
   for(uint p=min_spin_T;p<=take_off_T;p++){              // ramp up throttle 
     std::cout<<"INFO: Starting -> Throttle at "<<p<<std::endl;
@@ -35,13 +47,9 @@ int main(){
     if(p<=take_off_T-4) usleep(50000); 
   }
   ramping=false;
-
-  quad->Stabilise(2,0.5,0.0,0.0); // (t,Kp,Ki,Kd)   
-  // quad->Stabilise(2,0.1,0.1,0.1); // (t,Kp,Ki,Kd)   
-  // quad->Stabilise(2,0.1,0.1,0.1); // (t,Kp,Ki,Kd)   
-
-  cout<<"quad-GetMeanThrottle() = "<<quad->GetMeanThrottle()<<" min_spin_T = "<<min_spin_T<<endl;
   
+  quad->Stabilise(2,Kp,Ki,Kd);
+
   ramping=true;
   for(uint p=quad->GetMeanThrottle();p>=min_spin_T;p-=10){  // ramp down throttle 
     std::cout<<"INFO: Stopping -> Throttle at "<<p<<std::endl;
@@ -53,18 +61,29 @@ int main(){
   quad->StopMotors();                       // stop motors       
 
   delete quad;
-  myfile.close();
+  //myfile.close();
   logfile.close();
   std::cout<<"-- DONE --"<<std::endl;
   return 0;
 }
-//--- Functions
+
+
+//-------------------------------- Functions ---------------------------------- //
+
+
+
 float differecnce(float Ax,float Ay,float Bx,float By){return 1;}  
 
 void  Quad::Throttle(uint motorID,uint throttle){
+  if(motorID==S){
   if(ramping==false && throttle<(min_spin_T+10)){ std::cout<<"ERROR: min throttle excceed (min_spin_T)"<<std::endl; return;}
   if(ramping==false && throttle>max_allowed_T){ std::cout<<"ERROR: max throttle excceed (max_allowed_T)"<<std::endl; return;}
-  myfile <<motorID<<"="<<throttle; myfile.seekp(0);
+  //myfile <<motorID<<"="<<throttle<<endl; myfile.seekp(0);
+
+  pFile = fopen ("/dev/servoblaster","w");
+  fprintf(pFile,"%d=%d\n",motorID,throttle);
+  fclose(pFile);
+
   if(motorID==N)N_t=throttle;
   if(motorID==S)S_t=throttle;
   if(motorID==W)W_t=throttle;
@@ -72,6 +91,7 @@ void  Quad::Throttle(uint motorID,uint throttle){
 
   if(printlog){
     logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<std::endl; 
+  }
   }
 }
 
@@ -108,7 +128,7 @@ void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
   for(float st=0; st<timeS; st+=0.1){
     uint readfail=0;
     uint dt=1; 
-
+    
     double pitch_error=0, pitch_error_old=0, pitch_derivative=0, pitch_output=0, pitch_integral=0;
     double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
     double yaw_error=0,   yaw_error_old=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
@@ -140,8 +160,8 @@ void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
 	std::cout<<"INFO: Pitch Roll and Yaw        :"<<pitch_error <<" \t "<<roll_error <<" \t "<<yaw_error <<std::endl; 
 	std::cout<<"INFO: Pitch Roll and Yaw Outputs:"<<pitch_output<<" \t "<<roll_output<<" \t "<<yaw_output<<std::endl; 
 
-	Quad::Throttle(N,N_t-pitch_output); Quad::Throttle(S,S_t+pitch_output);
-	Quad::Throttle(E,E_t-roll_output);  Quad::Throttle(W,W_t+roll_output);
+	Quad::Throttle(N,N_t+pitch_output); Quad::Throttle(S,S_t-pitch_output);
+	Quad::Throttle(E,E_t+roll_output);  Quad::Throttle(W,W_t-roll_output);
 		
       }else{
 	readfail++;

@@ -9,12 +9,16 @@
 
 
 void XYquad(){
-  const int n = 362;	
+  const int n = 454-1;	
   float t[n],roll[n], pitch[n], yaw[n], N[n],S[n],E[n],W[n];
   string text;
   ifstream data;
-
+  string Kp,Ki,Kd;	
   data.open("log.txt");
+  
+  data>>text>>Kp>>Ki>>Kd;	
+
+  string title = "Configuration Kp:"+Kp+" Ki:"+Ki+" Kd:"+Kd;	
   
   int k = 0;
 
@@ -36,14 +40,14 @@ void XYquad(){
 
     Ca0->Divide(2,3);
     Ca0_1->cd();
-    grp_roll->SetTitle("roll");  grp_roll->SetLineColor(kRed);
+    grp_roll->SetTitle(title.c_str());  grp_roll->SetLineColor(kRed);
     grp_roll->SetMarkerStyle(20);  grp_roll->SetMarkerSize(0.5);
     grp_roll->SetMinimum(-90);  grp_roll->SetMaximum(90);
     grp_roll->GetXaxis()->SetTitle("t (A.U.)"); grp_roll->GetYaxis()->SetTitle("roll(degrees)");
     grp_roll->Draw("AP");
 
     Ca0_2->cd();
-    grp_pitch->SetTitle("pitch");  grp_pitch->SetLineColor(kRed);
+    grp_pitch->SetTitle(title.c_str());  grp_pitch->SetLineColor(kRed);
     grp_pitch->SetMarkerStyle(20);  grp_pitch->SetMarkerSize(0.5);
     grp_pitch->SetMinimum(-90);  grp_pitch->SetMaximum(90);
     grp_pitch->GetXaxis()->SetTitle("t (A.U.)"); grp_pitch->GetYaxis()->SetTitle("pitch(degrees)");
