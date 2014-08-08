@@ -61,7 +61,7 @@ int main(){
 //--- Functions
 float differecnce(float Ax,float Ay,float Bx,float By){return 1;}  
 
-void  Quad::Throttle(uint motorID,int throttle){
+void  Quad::Throttle(uint motorID,uint throttle){
   if(ramping==false && throttle<(min_spin_T+10)){ std::cout<<"ERROR: min throttle excceed (min_spin_T)"<<std::endl; return;}
   if(ramping==false && throttle>max_allowed_T){ std::cout<<"ERROR: max throttle excceed (max_allowed_T)"<<std::endl; return;}
   myfile <<motorID<<"="<<throttle; myfile.seekp(0);
@@ -82,7 +82,7 @@ void  Quad::ThrottleAllplusplus(){
   Quad::Throttle(W,W_t+1); 
 }
 
-void  Quad::ThrottleAll(int throttle){
+void  Quad::ThrottleAll(uint throttle){
   Quad::Throttle(N,throttle); 
   Quad::Throttle(E,throttle); 
   Quad::Throttle(S,throttle); 
