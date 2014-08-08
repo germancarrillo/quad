@@ -92,6 +92,22 @@ void  Quad::StopMotors(){
   usleep(200000);
 }
 
+void  Quad::ThrottleStabilising(uint motorID,int throttlediff){
+  char M_string_ID=M_string[motorID-1];
+  uint throttle=0;
+  if(     motorID==1){ motorID=0; throttle=N_t+throttlediff; } // N 1
+  else if(motorID==2){ motorID=4; throttle=E_t+throttlediff; } // E 2
+  else if(motorID==3){ motorID=7; throttle=S_t+throttlediff; } // S 3
+  else if(motorID==4){ motorID=5; throttle=W_t+throttlediff; } // W 4  
+  std::cout<<"INFO: Motor"<<motorID<<", "<<M_string_ID<<"->"<<throttle<<std::endl;
+  if(throttle>limT){ std::cout<<"ERROR: max throttle excceed"<<std::endl;  return;}
+  if(throttle==0)  { std::cout<<"ERROR: throttle unset, incorrect morotID"<<std::endl;  return;}
+  pFile = fopen ("/dev/servoblaster","w");
+  fprintf(pFile,"%d=%d\n",motorID,throttle);
+  fclose(pFile);
+}
+
+
 void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
   for(float st=0; st<timeS; st+=0.1){
     uint readfail=0;
@@ -131,6 +147,9 @@ void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
 
 	Quad::ThrottleStabilising(2,-pitch_output); Quad::ThrottleStabilising(4, pitch_output);	
 	Quad::ThrottleStabilising(1, roll_output);  Quad::ThrottleStabilising(3,-roll_output);
+
+	Quad::Throttle(N,N_t-pitch_output); Quad::Throttle(S,S_t+pitch_output);
+	Quad::Throttle(E,E_t-roll_output);  Quad::Throttle(W,W_t+roll_output);
 	
 	//Quad::Throttle(1,N_t+yaw_output);   Quad::Throttle(3,S_t+yaw_output);
 	//Quad::Throttle(2,E_t-yaw_output);   Quad::Throttle(4,W_t-yaw_output);
@@ -145,29 +164,7 @@ void  Quad::Stabilise(float timeS,double Kp,double Ki,double  Kd){   // PID
   }
 
 
-    while(1)
-      if(loop_mpu(&yaw,&pitch,&roll)){
-	
-	pitch_error      = pitch0 - pitch < tolerance? pitch0 - pitch :0;
-	pitch_integral   = pitch_integral + pitch_error*dt;
-	pitch_derivative = (pitch_error - pitch_error_old)/dt;
-	pitch_output     = int(Kp*pitch_error + Ki*pitch_integral + Kd*pitch_derivative);	
-	pitch_error_old  = pitch_error;
 
-	roll_error      = roll0 - roll < tolerance? roll0 - roll :0;
-	roll_integral   = roll_integral + roll_error*dt;
-	roll_derivative = (roll_error - roll_error_old)/dt;
-	roll_output     = int(Kp*roll_error + Ki*roll_integral + Kd*roll_derivative);	
-	roll_error_old  = roll_error;
-
-	yaw_error      = yaw0 - yaw < tolerance? yaw0 - yaw :0;
-	yaw_integral   = yaw_integral + yaw_error*dt;
-	yaw_derivative = (yaw_error - yaw_error_old)/dt;
-	yaw_output     = int(Kp*yaw_error + Ki*yaw_integral + Kd*yaw_derivative);	
-	yaw_error_old  = yaw_error;
-
-	Quad::Throttle(N,N_t-pitch_output); Quad::Throttle(S,S_t+pitch_output);
-	Quad::Throttle(E,E_t-roll_output);  Quad::Throttle(W,W_t+roll_output);
 	usleep(dt*1000);
 	
       }else{
