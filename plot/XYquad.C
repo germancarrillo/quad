@@ -9,7 +9,7 @@
 
 
 void XYquad(){
-  const int n = 1445-1;	
+  const int n = 1328-1;	
   float t[n],roll[n], pitch[n], yaw[n], N[n],S[n],E[n],W[n];
   string text;
   ifstream data;
