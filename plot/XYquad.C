@@ -3,13 +3,13 @@
 #include <iomanip>
 #include <vector>
 #include <string>
-#define take_off_T 1625  // take-off Throttle
-#define min_spin_T 1580  // start-rotating-propellers 
+#define take_off_T 1630  // take-off Throttle
+#define min_spin_T 1610  // start-rotating-propellers 
 #define max_allowed_T 1660 // max-allowed Throttle
 
 
 void XYquad(){
-  const int n = 1328-1;	
+  const int n = 505-1;	
   float t[n],roll[n], pitch[n], yaw[n], N[n],S[n],E[n],W[n];
   string text;
   ifstream data;

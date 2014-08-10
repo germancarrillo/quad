@@ -10,7 +10,7 @@
 #define min_spin_T 1581  // start-rotating-propellers 
 #define max_allowed_T 1660 // max-allowed Throttle
 #define min_allowed_T 1580 // min-allowed Throttle
-#define tolerance 0.0   // stability tolerance in degrees
+#define tolerance 2.0   // stability tolerance in degrees
 #define OUTPUT_READABLE_YAWPITCHROLL
 #define S 0
 #define W 4
@@ -33,14 +33,11 @@ double yaw=0,pitch=0,roll=0;
 ofstream logfile;
 ofstream myfile;
 
-double Kp=0.25;
-double Ki=0.02;
-double Kd=0.25;
-
 double pitch_error=0, pitch_error_old=0, pitch_derivative=0, pitch_output=0, pitch_integral=0;
 double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
 double yaw_error=0,   yaw_error_old=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
 
+FILE *pFile;
 
 int GetMeanThrottle(){
   return int((N_t+E_t+S_t+W_t)*0.25);
@@ -58,9 +55,13 @@ void  Throttle(int motorID,int throttle){
   else if(motorID==S)S_t=throttle;
   else if(motorID==W)W_t=throttle;
   else if(motorID==E)E_t=throttle;
+  pFile = fopen ("/dev/servoblaster","w");
+  fprintf(pFile,"%d=%d\n",motorID,throttle);
+  fclose(pFile);
   if(printlog){
     logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<std::endl; 
   }
+  usleep(100000);
 }
 
 void  ThrottleAllplusplus(){
@@ -81,6 +82,7 @@ void  InitMotors(){
   cout<<"INFO: Init Motors"<<endl;
   ramping=true;
   ThrottleAll(0);
+  usleep(1000000);
   ThrottleAll(1500);
   ramping=false;
   usleep(1000000);
@@ -97,7 +99,7 @@ void  StopMotors(){
 void Ramping(int motorID,int final_Throttle){
   if(Valid_Throttle(final_Throttle)==false) return;
   ramping=true;
-  int initial_Throttle;
+  int initial_Throttle=0;
   if(motorID==N){initial_Throttle=N_t; cout<<"INFO: Ramping N from "<<initial_Throttle<<" to "<<final_Throttle<<endl;}
   else if(motorID==S){initial_Throttle=S_t; cout<<"INFO: Ramping S from "<<initial_Throttle<<" to "<<final_Throttle<<endl;}
   else if(motorID==W){initial_Throttle=W_t; cout<<"INFO: Ramping W from "<<initial_Throttle<<" to "<<final_Throttle<<endl;}

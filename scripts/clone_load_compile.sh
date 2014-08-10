@@ -1,4 +1,7 @@
 date
+echo "Your IP:"
+ifconfig | grep -A 1 wlan |tail -n 1 | awk '{print $2}'
+sleep 3
 git clone https://github.com/camilocarrillo/quad
 cd quad
 git rev-parse HEAD >> hash.txt

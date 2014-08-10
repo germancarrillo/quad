@@ -3,42 +3,13 @@
 
 #define OUTPUT_READABLE_YAWPITCHROLL
 
-double yaw0,pitch0,roll0;                                // initial angles offset - horizontal  
 using namespace std;
-
-ofstream logfile;
-FILE *pFile;
-
-int main(){
-  if(!setup_orientaion())return 0; 
-  if(!setup_pwm())return 0; 
-  Quad *quad = new Quad();                  // class QUAD to manage position, orientation, velocity, angular speeds etc...
-  
-  logfile.open("log.txt");
-
-  logfile<<"Conf: "<<Kp<<" "<<Ki<<" "<<Kd<<endl;
-  
-  InitMotors();                       // start motors pulse 1500us  
-  RampingAll(min_spin_T);
-  RampingAll(take_off_T);
-  
-  StabiliseMPU(2,Kp,Ki,Kd);
-
-  RampingAll(take_off_T);
-  RampingAll(min_spin_T);
-  StopMotors();                       // stop motors       
-
-  delete quad;
-  logfile.close();
-  std::cout<<"-- DONE --"<<std::endl;
-  return 0;
-}
 
 //-------------------------------- Functions ---------------------------------- //
 
 
-void StabiliseMPU(float timeS,double Kp,double Ki,double  Kd){   // PID
-  for(float st=0; st<timeS; st+=0.1){
+void StabiliseMPU(double timeS,double Kp,double Ki,double  Kd){   // PID
+  for(double st=0; st<timeS; st+=0.1){
     uint readfail=0;
     uint dt=1; 
     
@@ -73,8 +44,8 @@ void StabiliseMPU(float timeS,double Kp,double Ki,double  Kd){   // PID
 	std::cout<<"INFO: Pitch Roll and Yaw        :"<<pitch_error <<" \t "<<roll_error <<" \t "<<yaw_error <<std::endl; 
 	std::cout<<"INFO: Pitch Roll and Yaw Outputs:"<<pitch_output<<" \t "<<roll_output<<" \t "<<yaw_output<<std::endl; 
 
-	Quad::Throttle(N,take_off_T+pitch_output); Quad::Throttle(S,take_off_T-pitch_output);
-	Quad::Throttle(E,take_off_T+roll_output);  Quad::Throttle(W,take_off_T-roll_output);
+	Throttle(N,take_off_T+pitch_output); Throttle(S,take_off_T-pitch_output);
+	Throttle(E,take_off_T+roll_output);  Throttle(W,take_off_T-roll_output);
 		
       }else{
 	readfail++;
@@ -143,6 +114,7 @@ void setup_mpu() {
 
 bool loop_mpu(double *yaw,double *pitch,double *roll){
     // if programming failed, don't try to do anything
+  usleep(100000);
     if (!dmpReady) return 0;
     
     bool badFIFO=true;
@@ -190,3 +162,41 @@ int read_mpu(){
   if(readmpu_f) std::cout<<" yaw:"<<yaw<<" pitch:"<<pitch<<" roll:"<<roll<<std::endl; else std::cout<<" mpu: failed to retrieve angles"<<std::endl;
   return 0; 
 }
+
+int main(int argc, char* argv[]){
+  //PID variables
+  double Kp=0.25;
+  double Ki=0.02;
+  double Kd=0.25;
+  //-------------
+
+  // Check the number of parameters
+  Kp=double(atof(argv[1]));
+  Ki=double(atof(argv[2]));
+  Kd=double(atof(argv[3]));
+    
+  cout<<"Warning running with this conf: "<<Kp<<" "<<Ki<<" "<<Kd<<endl;
+
+  usleep(2000000);
+
+  if(!setup_orientaion())return 0; 
+  if(!setup_pwm())return 0; 
+
+  logfile.open("log.txt");
+
+  logfile<<"Conf: "<<Kp<<" "<<Ki<<" "<<Kd<<endl;
+  
+  InitMotors();                       // start motors pulse 1500us  
+  ThrottleAll(min_spin_T);
+  ThrottleAll(take_off_T);
+  
+  StabiliseMPU(1,Kp,Ki,Kd);
+
+  ThrottleAll(take_off_T);
+  StopMotors();                       // stop motors       
+
+  logfile.close();
+  std::cout<<"-- DONE --"<<std::endl;
+  return 0;
+}
+
