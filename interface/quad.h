@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <cmath>
+#include <sys/time.h>
 
 #define take_off_T 1625  // take-off Throttle
 #define min_spin_T 1581  // start-rotating-propellers 
@@ -19,8 +20,14 @@
 #define printlog true
 #define PI 3.1415926
 
+//for time measurments
+struct timeval start, end, buff,t0;
+long mtime, seconds, useconds; 
 using namespace std;
 
+bool firstime=true;
+
+bool isMC=false;
 double N_t;
 double W_t;
 double E_t;
@@ -55,13 +62,30 @@ void  Throttle(int motorID,int throttle){
   else if(motorID==S)S_t=throttle;
   else if(motorID==W)W_t=throttle;
   else if(motorID==E)E_t=throttle;
-  pFile = fopen ("/dev/servoblaster","w");
-  fprintf(pFile,"%d=%d\n",motorID,throttle);
-  fclose(pFile);
-  if(printlog){
-    logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<std::endl; 
+  if(isMC==false){
+    pFile = fopen ("/dev/servoblaster","w");
+    fprintf(pFile,"%d=%d\n",motorID,throttle);
+    fclose(pFile);
+  }else{
+    pFile = fopen ("servoblasterMC.txt","a");
+    gettimeofday(&start, NULL);
+    if(firstime==true){
+      t0=start;
+      buff=start;
+      firstime=false;
+    }
+    seconds  = start.tv_sec  - buff.tv_sec; useconds = start.tv_usec - buff.tv_usec;buff=start;
+    mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5; 
+    fprintf(pFile,"%d=%d %ld\n",motorID,throttle,mtime);
+    fclose(pFile);
   }
-  usleep(100000);
+  if(printlog){
+    gettimeofday(&start, NULL);
+    seconds  = start.tv_sec-t0.tv_sec; useconds = start.tv_usec-t0.tv_usec;
+    mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5; 
+    logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<" "<<mtime<<endl; 
+  }
+  usleep(10000);
 }
 
 void  ThrottleAllplusplus(){
@@ -74,7 +98,7 @@ void  ThrottleAllplusplus(){
 void  ThrottleAll(int throttle){
   Throttle(N,throttle); 
   Throttle(E,throttle); 
-   Throttle(S,throttle); 
+  Throttle(S,throttle); 
   Throttle(W,throttle); 
 }
 
@@ -159,6 +183,13 @@ void  Stabilise(double timeS,double Kp,double Ki,double  Kd,int value_T){   // P
   yaw_output       = int(Kp*yaw_error + Ki*yaw_integral + Kd*yaw_derivative);	
   yaw_error_old    = yaw_error;
   
-  Throttle(N,value_T+pitch_output); Throttle(S,value_T-pitch_output);
-  Throttle(E,value_T+roll_output);  Throttle(W,value_T-roll_output);
+  usleep(100000);
+  Throttle(N,value_T+pitch_output); 
+  usleep(100000);
+  Throttle(S,value_T-pitch_output);
+  usleep(100000);
+  Throttle(E,value_T+roll_output);  
+  usleep(100000);
+  Throttle(W,value_T-roll_output);
+  usleep(100000);
 }
