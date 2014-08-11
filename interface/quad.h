@@ -7,7 +7,7 @@
 #include <cmath>
 #include <sys/time.h>
 
-#define take_off_T 1625  // take-off Throttle
+#define take_off_T 1610  // take-off Throttle
 #define min_spin_T 1581  // start-rotating-propellers 
 #define max_allowed_T 1660 // max-allowed Throttle
 #define min_allowed_T 1580 // min-allowed Throttle
@@ -21,9 +21,11 @@
 #define PI 3.1415926
 
 //for time measurments
-struct timeval start, end, buff,t0;
+struct timeval start, end, buff,t0,start_mpu,end_mpu;
 long mtime, seconds, useconds; 
 using namespace std;
+
+uint badFIFOcount=0;
 
 bool firstime=true;
 
@@ -58,7 +60,7 @@ bool Valid_Throttle(int throttle){
 
 void  Throttle(int motorID,int throttle){
   if(Valid_Throttle(throttle)==false) return;
-  if(motorID==N)N_t=throttle;
+  if     (motorID==N)N_t=throttle;
   else if(motorID==S)S_t=throttle;
   else if(motorID==W)W_t=throttle;
   else if(motorID==E)E_t=throttle;
@@ -84,11 +86,11 @@ void  Throttle(int motorID,int throttle){
     seconds  = start.tv_sec-t0.tv_sec; useconds = start.tv_usec-t0.tv_usec;
     mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5; 
     logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<" "<<mtime<<endl; 
-  }
+   }
   usleep(10000);
 }
 
-void  ThrottleAllplusplus(){
+void ThrottleAllplusplus(){
   Throttle(N,N_t+1); 
   Throttle(E,E_t+1); 
   Throttle(S,S_t+1); 
@@ -117,14 +119,13 @@ void  StopMotors(){
   ramping=true;
   ThrottleAll(0);
   ramping=false;
-  usleep(200000);
 }
 
 void Ramping(int motorID,int final_Throttle){
   if(Valid_Throttle(final_Throttle)==false) return;
   ramping=true;
   int initial_Throttle=0;
-  if(motorID==N){initial_Throttle=N_t; cout<<"INFO: Ramping N from "<<initial_Throttle<<" to "<<final_Throttle<<endl;}
+  if     (motorID==N){initial_Throttle=N_t; cout<<"INFO: Ramping N from "<<initial_Throttle<<" to "<<final_Throttle<<endl;}
   else if(motorID==S){initial_Throttle=S_t; cout<<"INFO: Ramping S from "<<initial_Throttle<<" to "<<final_Throttle<<endl;}
   else if(motorID==W){initial_Throttle=W_t; cout<<"INFO: Ramping W from "<<initial_Throttle<<" to "<<final_Throttle<<endl;}
   else if(motorID==E){initial_Throttle=E_t; cout<<"INFO: Ramping E from "<<initial_Throttle<<" to "<<final_Throttle<<endl;}
@@ -183,13 +184,8 @@ void  Stabilise(double timeS,double Kp,double Ki,double  Kd,int value_T){   // P
   yaw_output       = int(Kp*yaw_error + Ki*yaw_integral + Kd*yaw_derivative);	
   yaw_error_old    = yaw_error;
   
-  usleep(100000);
   Throttle(N,value_T+pitch_output); 
-  usleep(100000);
   Throttle(S,value_T-pitch_output);
-  usleep(100000);
   Throttle(E,value_T+roll_output);  
-  usleep(100000);
   Throttle(W,value_T-roll_output);
-  usleep(100000);
 }
