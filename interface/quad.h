@@ -92,7 +92,7 @@ void  Throttle(int motorID,int throttle){
     //    mtime = (seconds + useconds/1000000.0) + 0.5; 
     logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<" "<<mtime<<endl; 
    }
-  usleep(10000);
+  //usleep(100000);
 }
 
 void ThrottleAllplusplus(){

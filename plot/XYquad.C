@@ -9,10 +9,10 @@
 #define min_spin_T 1610  // start-rotating-propellers 
 #define max_allowed_T 1660 // max-allowed Throttle
 #define TMIN 2
-#define TMAX 5171
+#define TMAX 23313
 
 void XYquad(){
-  const int n = 189-1;	
+  const int n = 228-1;	
   float t[n],roll[n], pitch[n], yaw[n], N[n],S[n],E[n],W[n];
   string text;
   ifstream data;

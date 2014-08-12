@@ -16,10 +16,8 @@ void StabiliseMPU(uint stabilizing_attemps,double Kp,double Ki,double  Kd){   //
     double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
     double yaw_error=0,   yaw_error_old=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
 
-    loop_mpu(&yaw,&pitch,&roll);	
-    
-    while(fabs(pitch0 - pitch) > tolerance || fabs(roll0 - roll) > tolerance)
-      if(loop_mpu(&yaw,&pitch,&roll)){	
+    while(loop_mpu(&yaw,&pitch,&roll)){
+      if(fabs(pitch0 - pitch) > tolerance || fabs(roll0 - roll) > tolerance){
 	pitch_error      = fabs(pitch0 - pitch) > tolerance? pitch0 - pitch :0;
 	pitch_integral   = pitch_integral + pitch_error*dt;
 	pitch_derivative = (pitch_error - pitch_error_old)/dt;
@@ -46,14 +44,18 @@ void StabiliseMPU(uint stabilizing_attemps,double Kp,double Ki,double  Kd){   //
 	//Throttle(N,take_off_T+pitch_output); Throttle(S,take_off_T-pitch_output);
 	//Throttle(E,take_off_T+roll_output);  Throttle(W,take_off_T-roll_output);
 
-	Throttle(N,min_spin_T+10+pitch_output); Throttle(S,min_spin_T+10-pitch_output);
-	Throttle(E,min_spin_T+10+roll_output);  Throttle(W,min_spin_T+10-roll_output);
-	
+	if(fabs(pitch0 - pitch) > tolerance){
+	  Throttle(N,min_spin_T+10+pitch_output); Throttle(S,min_spin_T+10-pitch_output);
+	}
+	if(fabs(roll0 - roll) > tolerance){
+	  Throttle(E,min_spin_T+10+roll_output);  Throttle(W,min_spin_T+10-roll_output);
+	}
       }else{
-	std::cout<<"ERROR: Can't read mpu, failed to stabilise!"<<std::endl;  continue;  
+	cout<<"INFO: ---- finish stabilise ---- count:"<<count<<endl;  
+	break;
       }
+    }
   }
-  std::cout<<"INFO: -------finish stabilise----------"<<std::endl;  
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -184,8 +186,8 @@ int main(int argc, char* argv[]){
   ThrottleAll(min_spin_T);
   //ThrottleAll(take_off_T);
   
-  StabiliseMPU(10,Kp,Ki,Kd);
-
+  StabiliseMPU(100,Kp,Ki,Kd);
+  
   //ThrottleAll(take_off_T);
   StopMotors();                       // stop motors       
 
