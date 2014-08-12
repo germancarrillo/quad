@@ -43,8 +43,11 @@ void StabiliseMPU(uint stabilizing_attemps,double Kp,double Ki,double  Kd){   //
 	std::cout<<"INFO: Pitch Roll and Yaw        :"<<pitch_error <<" \t "<<roll_error <<" \t "<<yaw_error <<std::endl; 
 	std::cout<<"INFO: Pitch Roll and Yaw Outputs:"<<pitch_output<<" \t "<<roll_output<<" \t "<<yaw_output<<std::endl; 
 
-	Throttle(N,take_off_T+pitch_output); Throttle(S,take_off_T-pitch_output);
-	Throttle(E,take_off_T+roll_output);  Throttle(W,take_off_T-roll_output);
+	//Throttle(N,take_off_T+pitch_output); Throttle(S,take_off_T-pitch_output);
+	//Throttle(E,take_off_T+roll_output);  Throttle(W,take_off_T-roll_output);
+
+	Throttle(N,min_spin_T+10+pitch_output); Throttle(S,min_spin_T+10-pitch_output);
+	Throttle(E,min_spin_T+10+roll_output);  Throttle(W,min_spin_T+10-roll_output);
 	
       }else{
 	std::cout<<"ERROR: Can't read mpu, failed to stabilise!"<<std::endl;  continue;  
@@ -179,11 +182,11 @@ int main(int argc, char* argv[]){
   
   InitMotors();                       // start motors pulse 1500us  
   ThrottleAll(min_spin_T);
-  ThrottleAll(take_off_T);
+  //ThrottleAll(take_off_T);
   
   StabiliseMPU(10,Kp,Ki,Kd);
 
-  ThrottleAll(take_off_T);
+  //ThrottleAll(take_off_T);
   StopMotors();                       // stop motors       
 
   logfile.close();

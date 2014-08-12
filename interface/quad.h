@@ -21,7 +21,7 @@
 #define PI 3.1415926
 
 //for time measurments
-struct timeval start, end, buff,t0,start_mpu,end_mpu;
+struct timeval start, end, buff,t0,start_mpu,end_mpu,time_log;
 long mtime, seconds, useconds; 
 using namespace std;
 
@@ -64,6 +64,14 @@ void  Throttle(int motorID,int throttle){
   else if(motorID==S)S_t=throttle;
   else if(motorID==W)W_t=throttle;
   else if(motorID==E)E_t=throttle;
+
+  if(firstime==true){
+    gettimeofday(&start, NULL);
+    t0=start;
+    buff=start;
+    firstime=false;
+  }
+
   if(isMC==false){
     pFile = fopen ("/dev/servoblaster","w");
     fprintf(pFile,"%d=%d\n",motorID,throttle);
@@ -71,20 +79,17 @@ void  Throttle(int motorID,int throttle){
   }else{
     pFile = fopen ("servoblasterMC.txt","a");
     gettimeofday(&start, NULL);
-    if(firstime==true){
-      t0=start;
-      buff=start;
-      firstime=false;
-    }
     seconds  = start.tv_sec  - buff.tv_sec; useconds = start.tv_usec - buff.tv_usec;buff=start;
     mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5; 
     fprintf(pFile,"%d=%d %ld\n",motorID,throttle,mtime);
     fclose(pFile);
   }
   if(printlog){
-    gettimeofday(&start, NULL);
-    seconds  = start.tv_sec-t0.tv_sec; useconds = start.tv_usec-t0.tv_usec;
+    gettimeofday(&time_log, NULL);
+    seconds  = time_log.tv_sec - t0.tv_sec; useconds = time_log.tv_usec - t0.tv_usec;
+    cout<<"timelog: "<<time_log.tv_sec<<" "<<time_log.tv_usec<<endl;
     mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5; 
+    //    mtime = (seconds + useconds/1000000.0) + 0.5; 
     logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<" "<<mtime<<endl; 
    }
   usleep(10000);
