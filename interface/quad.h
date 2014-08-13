@@ -6,12 +6,15 @@
 #include <stdint.h>
 #include <cmath>
 #include <sys/time.h>
+#include <fstream>
+#include <sstream>
+
 
 #define take_off_T 1610  // take-off Throttle
 #define min_spin_T 1581  // start-rotating-propellers 
 #define max_allowed_T 1660 // max-allowed Throttle
 #define min_allowed_T 1580 // min-allowed Throttle
-#define tolerance 2.0   // stability tolerance in degrees
+#define tolerance 3.0   // stability tolerance in degrees
 #define OUTPUT_READABLE_YAWPITCHROLL
 #define S 0
 #define W 4
@@ -46,6 +49,8 @@ double pitch_error=0, pitch_error_old=0, pitch_derivative=0, pitch_output=0, pit
 double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
 double yaw_error=0,   yaw_error_old=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
 
+stringstream command;
+
 FILE *pFile;
 
 int GetMeanThrottle(){
@@ -73,9 +78,14 @@ void  Throttle(int motorID,int throttle){
   }
 
   if(isMC==false){
-    pFile = fopen ("/dev/servoblaster","w");
-    fprintf(pFile,"%d=%d\n",motorID,throttle);
-    fclose(pFile);
+    //echo 0=1500 > /dev/servoblaster
+    command.str(""); command<<"echo "<<motorID<<"="<<throttle<<" > /dev/servoblaster"<<endl;
+    const char *char_command = command.str().c_str();
+    //cout<<char_command<<endl;
+    system(char_command);
+    //pFile = fopen ("/dev/servoblaster","w");
+    //fprintf(pFile,"%d=%d\n",motorID,throttle);
+    //fclose(pFile);
   }else{
     pFile = fopen ("servoblasterMC.txt","a");
     gettimeofday(&start, NULL);
@@ -84,15 +94,6 @@ void  Throttle(int motorID,int throttle){
     fprintf(pFile,"%d=%d %ld\n",motorID,throttle,mtime);
     fclose(pFile);
   }
-  if(printlog){
-    gettimeofday(&time_log, NULL);
-    seconds  = time_log.tv_sec - t0.tv_sec; useconds = time_log.tv_usec - t0.tv_usec;
-    cout<<"timelog: "<<time_log.tv_sec<<" "<<time_log.tv_usec<<endl;
-    mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5; 
-    //    mtime = (seconds + useconds/1000000.0) + 0.5; 
-    logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<" "<<mtime<<endl; 
-   }
-  //usleep(100000);
 }
 
 void ThrottleAllplusplus(){

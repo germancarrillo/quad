@@ -3,16 +3,17 @@
 #include <iomanip>
 #include <vector>
 #include <string>
-#define min_plot 1500
-#define max_plot 1660
+#define min_plot 1580
+#define max_plot 1620
+#define angle_range 20
 #define take_off_T 1630  // take-off Throttle
 #define min_spin_T 1610  // start-rotating-propellers 
 #define max_allowed_T 1660 // max-allowed Throttle
-#define TMIN 2
-#define TMAX 23313
+#define TMIN 2490
+#define TMAX 9440
 
 void XYquad(){
-  const int n = 228-1;	
+  const int n = 95-1;	
   float t[n],roll[n], pitch[n], yaw[n], N[n],S[n],E[n],W[n];
   string text;
   ifstream data;
@@ -41,23 +42,27 @@ void XYquad(){
     TCanvas * Ca0 = new TCanvas("Ca0","Canvas",1200,800);    
 
     Ca0->Divide(2,3);
+
     Ca0_1->cd();
+    Ca0_1->SetGrid();
     grp_roll->SetTitle(title.c_str());  grp_roll->SetLineColor(kRed);
     grp_roll->SetMarkerStyle(20);  grp_roll->SetMarkerSize(0.5);
-    grp_roll->SetMinimum(-90);  grp_roll->SetMaximum(90);
+    grp_roll->SetMinimum(-angle_range);  grp_roll->SetMaximum(angle_range);
     grp_roll->GetXaxis()->SetRangeUser(TMIN,TMAX);	
     grp_roll->GetXaxis()->SetTitle("t (ms)"); grp_roll->GetYaxis()->SetTitle("roll(degrees)");
     grp_roll->Draw("AP");
 
     Ca0_2->cd();
+    Ca0_2->SetGrid();
     grp_pitch->SetTitle(title.c_str());  grp_pitch->SetLineColor(kRed);
     grp_pitch->SetMarkerStyle(20);  grp_pitch->SetMarkerSize(0.5);
-    grp_pitch->SetMinimum(-90);  grp_pitch->SetMaximum(90);
+    grp_pitch->SetMinimum(-angle_range);  grp_pitch->SetMaximum(angle_range);
     grp_pitch->GetXaxis()->SetRangeUser(TMIN,TMAX);		
     grp_pitch->GetXaxis()->SetTitle("t (ms)"); grp_pitch->GetYaxis()->SetTitle("pitch(degrees)");
     grp_pitch->Draw("AP");
     
     Ca0_4->cd();
+    Ca0_4->SetGrid();
     grp_N->SetTitle("N");  grp_N->SetLineColor(kRed);
     grp_N->SetMarkerStyle(20);  grp_N->SetMarkerSize(0.5);
     grp_N->SetMinimum(min_plot);  grp_N->SetMaximum(max_plot);
@@ -66,6 +71,7 @@ void XYquad(){
     grp_N->Draw("AP");
 
     Ca0_3->cd();
+    Ca0_3->SetGrid();	
     grp_E->SetTitle("E");  grp_E->SetLineColor(kRed);
     grp_E->SetMarkerStyle(20);  grp_E->SetMarkerSize(0.5);
     grp_E->SetMinimum(min_plot);  grp_E->SetMaximum(max_plot);
@@ -73,6 +79,7 @@ void XYquad(){
     grp_E->Draw("AP");
 
     Ca0_6->cd();
+    Ca0_6->SetGrid();	
     grp_S->SetTitle("S");  grp_S->SetLineColor(kRed);
     grp_S->SetMarkerStyle(20);  grp_S->SetMarkerSize(0.5);
     grp_S->SetMinimum(min_plot);  grp_S->SetMaximum(max_plot);
@@ -81,6 +88,7 @@ void XYquad(){
     grp_S->Draw("AP");
 
     Ca0_5->cd();
+    Ca0_5->SetGrid();
     grp_W->SetTitle("W");  grp_W->SetLineColor(kRed);
     grp_W->SetMarkerStyle(20);  grp_W->SetMarkerSize(0.5);
     grp_W->SetMinimum(min_plot);  grp_W->SetMaximum(max_plot);

@@ -45,10 +45,10 @@ void StabiliseMPU(uint stabilizing_attemps,double Kp,double Ki,double  Kd){   //
 	//Throttle(E,take_off_T+roll_output);  Throttle(W,take_off_T-roll_output);
 
 	if(fabs(pitch0 - pitch) > tolerance){
-	  Throttle(N,min_spin_T+10+pitch_output); Throttle(S,min_spin_T+10-pitch_output);
+	  Throttle(N,min_spin_T+20+pitch_output); Throttle(S,min_spin_T+20-pitch_output);
 	}
 	if(fabs(roll0 - roll) > tolerance){
-	  Throttle(E,min_spin_T+10+roll_output);  Throttle(W,min_spin_T+10-roll_output);
+	  Throttle(E,min_spin_T+20+roll_output);  Throttle(W,min_spin_T+20-roll_output);
 	}
       }else{
 	cout<<"INFO: ---- finish stabilise ---- count:"<<count<<endl;  
@@ -74,8 +74,15 @@ bool setup_orientaion(){
   setup_mpu();                                           // giro & accelerometer setup
   usleep(250000);                                        // sleep 0.25s  
   loop_mpu(&yaw0,&pitch0,&roll0);  usleep(500000);       // starting values (twice) must be in a horizontal position  
-  if(loop_mpu(&yaw0,&pitch0,&roll0)) std::cout<<std::endl<<std::endl<<"INFO: Reading initial angles::: yaw0:"<<yaw0<<" pitch0:"<<pitch0<<" roll0:"<<roll0<<std::endl; 
-  else{ std::cout<<"FATAL: mpu: failed to retrieve angles, can't continue!"<<std::endl; return 0; }
+  if(loop_mpu(&yaw0,&pitch0,&roll0)){
+    std::cout<<std::endl<<std::endl<<"INFO: Reading initial angles::: yaw0:"<<yaw0<<" pitch0:"<<pitch0<<" roll0:"<<roll0<<std::endl; 
+    cout<<"Hacking initial angles to 0,0,0"<<endl;
+    pitch0=0;
+    roll0=0;
+  }
+  else{ 
+    std::cout<<"FATAL: mpu: failed to retrieve angles, can't continue!"<<std::endl; return 0; 
+  }
   return 1;
 };
 
@@ -151,6 +158,13 @@ bool loop_mpu(double *yaw,double *pitch,double *roll){
       *pitch = ypr[1] * 180/M_PI;
       *roll  = ypr[2] * 180/M_PI;
       //printf("ypr  %7.2f %7.2f %7.2f    ",ypr[0] * 180/M_PI,ypr[1] * 180/M_PI,ypr[2] * 180/M_PI);
+      if(printlog){
+	gettimeofday(&time_log, NULL);
+	seconds  = time_log.tv_sec - t0.tv_sec; useconds = time_log.tv_usec - t0.tv_usec;
+	cout<<"timelog: "<<time_log.tv_sec<<" "<<time_log.tv_usec<<endl;
+	mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5; 
+	logfile<<"to_plot: "<<*roll<<" "<<*pitch<<" "<<*yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<" "<<mtime<<endl; 
+      }
       return 1;
       #endif     
       printf("\n");
@@ -184,11 +198,11 @@ int main(int argc, char* argv[]){
   
   InitMotors();                       // start motors pulse 1500us  
   ThrottleAll(min_spin_T);
-  //ThrottleAll(take_off_T);
+  ThrottleAll(take_off_T);
   
-  StabiliseMPU(100,Kp,Ki,Kd);
+  StabiliseMPU(50,Kp,Ki,Kd);
   
-  //ThrottleAll(take_off_T);
+  ThrottleAll(min_spin_T);
   StopMotors();                       // stop motors       
 
   logfile.close();
