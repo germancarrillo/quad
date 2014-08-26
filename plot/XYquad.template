@@ -5,6 +5,8 @@
 #include <string>
 #define min_plot 1580
 #define max_plot 1620
+#define min_plot_sum -200
+#define max_plot_sum 200
 #define angle_range 20
 #define take_off_T 1630  // take-off Throttle
 #define min_spin_T 1610  // start-rotating-propellers 
@@ -38,11 +40,15 @@ void XYquad(){
     TGraphErrors * grp_S = new TGraph(n,t,S);
     TGraphErrors * grp_E = new TGraph(n,t,E);
     TGraphErrors * grp_W = new TGraph(n,t,W);
+
+    TGraphErrors * grp_p_p = new TGraph(n,t,p_p);
+    TGraphErrors * grp_p_i = new TGraph(n,t,p_i);
+    TGraphErrors * grp_p_d = new TGraph(n,t,p_d);
     
     TCanvas * Ca0 = new TCanvas("Ca0","Canvas",1200,800);    
 
     Ca0->Divide(2,3);
-
+    /*
     Ca0_1->cd();
     Ca0_1->SetGrid();
     grp_roll->SetTitle(title.c_str());  grp_roll->SetLineColor(kRed);
@@ -51,25 +57,16 @@ void XYquad(){
     grp_roll->GetXaxis()->SetRangeUser(TMIN,TMAX);	
     grp_roll->GetXaxis()->SetTitle("t (ms)"); grp_roll->GetYaxis()->SetTitle("roll(degrees)");
     grp_roll->Draw("AP");
-
-    Ca0_2->cd();
-    Ca0_2->SetGrid();
+    */
+    Ca0_1->cd();
+    Ca0_1->SetGrid();
     grp_pitch->SetTitle(title.c_str());  grp_pitch->SetLineColor(kRed);
     grp_pitch->SetMarkerStyle(20);  grp_pitch->SetMarkerSize(0.5);
     grp_pitch->SetMinimum(-angle_range);  grp_pitch->SetMaximum(angle_range);
     grp_pitch->GetXaxis()->SetRangeUser(TMIN,TMAX);		
     grp_pitch->GetXaxis()->SetTitle("t (ms)"); grp_pitch->GetYaxis()->SetTitle("pitch(degrees)");
     grp_pitch->Draw("AP");
-    
-    Ca0_4->cd();
-    Ca0_4->SetGrid();
-    grp_N->SetTitle("N");  grp_N->SetLineColor(kRed);
-    grp_N->SetMarkerStyle(20);  grp_N->SetMarkerSize(0.5);
-    grp_N->SetMinimum(min_plot);  grp_N->SetMaximum(max_plot);
-    grp_N->GetXaxis()->SetRangeUser(TMIN,TMAX);	
-    grp_N->GetXaxis()->SetTitle("t (ms)"); grp_N->GetYaxis()->SetTitle("N(pulse)");
-    grp_N->Draw("AP");
-
+    /*
     Ca0_3->cd();
     Ca0_3->SetGrid();	
     grp_E->SetTitle("E");  grp_E->SetLineColor(kRed);
@@ -77,16 +74,18 @@ void XYquad(){
     grp_E->SetMinimum(min_plot);  grp_E->SetMaximum(max_plot);
     grp_E->GetXaxis()->SetTitle("t (ms)"); grp_E->GetYaxis()->SetTitle("E(pulse)");
     grp_E->Draw("AP");
+    */
+    
+    Ca0_3->cd();
+    Ca0_3->SetGrid();
+    grp_N->SetTitle("N");  grp_N->SetLineColor(kRed);
+    grp_N->SetMarkerStyle(20);  grp_N->SetMarkerSize(0.5);
+    grp_N->SetMinimum(min_plot);  grp_N->SetMaximum(max_plot);
+    grp_N->GetXaxis()->SetRangeUser(TMIN,TMAX);	
+    grp_N->GetXaxis()->SetTitle("t (ms)"); grp_N->GetYaxis()->SetTitle("N(pulse)");
+    grp_N->Draw("AP");
 
-    Ca0_6->cd();
-    Ca0_6->SetGrid();	
-    grp_S->SetTitle("S");  grp_S->SetLineColor(kRed);
-    grp_S->SetMarkerStyle(20);  grp_S->SetMarkerSize(0.5);
-    grp_S->SetMinimum(min_plot);  grp_S->SetMaximum(max_plot);
-    grp_S->GetXaxis()->SetRangeUser(TMIN,TMAX);		
-    grp_S->GetXaxis()->SetTitle("t (ms)"); grp_S->GetYaxis()->SetTitle("S(pulse)");
-    grp_S->Draw("AP");
-
+    /*
     Ca0_5->cd();
     Ca0_5->SetGrid();
     grp_W->SetTitle("W");  grp_W->SetLineColor(kRed);
@@ -95,6 +94,46 @@ void XYquad(){
     grp_W->GetXaxis()->SetRangeUser(TMIN,TMAX);	
     grp_W->GetXaxis()->SetTitle("t (ms)"); grp_W->GetYaxis()->SetTitle("W(pulse)");
     grp_W->Draw("AP");
+    */
+    
+    Ca0_5->cd();
+    Ca0_5->SetGrid();	
+    grp_S->SetTitle("S");  grp_S->SetLineColor(kRed);
+    grp_S->SetMarkerStyle(20);  grp_S->SetMarkerSize(0.5);
+    grp_S->SetMinimum(min_plot);  grp_S->SetMaximum(max_plot);
+    grp_S->GetXaxis()->SetRangeUser(TMIN,TMAX);		
+    grp_S->GetXaxis()->SetTitle("t (ms)"); grp_S->GetYaxis()->SetTitle("S(pulse)");
+    grp_S->Draw("AP");
+
+    
+    Ca0_2->cd();
+    Ca0_2->SetGrid();
+    grp_p_p->SetTitle("P");  grp_p_p->SetLineColor(kRed);
+    grp_p_p->SetMarkerStyle(20);  grp_p_p->SetMarkerSize(0.5);
+    grp_p_p->SetMinimum(min_plot_sum);  grp_p_p->SetMaximum(max_plot_sum);
+    grp_p_p->GetXaxis()->SetRangeUser(TMIN,TMAX);	
+    grp_p_p->GetXaxis()->SetTitle("t (ms)"); grp_p_p->GetYaxis()->SetTitle("P");
+    grp_p_p->Draw("AP");
+
+
+    Ca0_4->cd();
+    Ca0_4->SetGrid();
+    grp_p_i->SetTitle("I");  grp_p_i->SetLineColor(kRed);
+    grp_p_i->SetMarkerStyle(20);  grp_p_i->SetMarkerSize(0.5);
+    grp_p_i->SetMinimum(min_plot_sum);  grp_p_i->SetMaximum(max_plot_sum);
+    grp_p_i->GetXaxis()->SetRangeUser(TMIN,TMAX);	
+    grp_p_i->GetXaxis()->SetTitle("t (ms)"); grp_p_i->GetYaxis()->SetTitle("I");
+    grp_p_i->Draw("AP");
+
+    Ca0_6->cd();
+    Ca0_6->SetGrid();
+    grp_p_d->SetTitle("D");  grp_p_d->SetLineColor(kRed);
+    grp_p_d->SetMarkerStyle(20);  grp_p_d->SetMarkerSize(0.5);
+    grp_p_d->SetMinimum(min_plot_sum);  grp_p_d->SetMaximum(max_plot_sum);
+    grp_p_d->GetXaxis()->SetRangeUser(TMIN,TMAX);	
+    grp_p_d->GetXaxis()->SetTitle("t (ms)"); grp_p_d->GetYaxis()->SetTitle("D");
+    grp_p_d->Draw("AP");
+
 
     string image_name = "XYquad_Kp_"+Kp+"Ki_"+Ki+"Kd_"+Kd+".png";	
 
