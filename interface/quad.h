@@ -6,12 +6,15 @@
 #include <stdint.h>
 #include <cmath>
 #include <sys/time.h>
+#include <fstream>
+#include <sstream>
+
 
 #define take_off_T 1610  // take-off Throttle
 #define min_spin_T 1581  // start-rotating-propellers 
-#define max_allowed_T 1660 // max-allowed Throttle
+#define max_allowed_T 1620 // max-allowed Throttle
 #define min_allowed_T 1580 // min-allowed Throttle
-#define tolerance 2.0   // stability tolerance in degrees
+#define tolerance 3.0   // stability tolerance in degrees
 #define OUTPUT_READABLE_YAWPITCHROLL
 #define S 0
 #define W 4
@@ -21,7 +24,7 @@
 #define PI 3.1415926
 
 //for time measurments
-struct timeval start, end, buff,t0,start_mpu,end_mpu;
+struct timeval start, end, buff,t0,start_mpu,end_mpu,time_log,t_now,t_old;
 long mtime, seconds, useconds; 
 using namespace std;
 
@@ -34,13 +37,19 @@ double N_t;
 double W_t;
 double E_t;
 double S_t;
+
+double Kp,Ki,Kd;
 bool ramping=false;
 
 double yaw0=0,pitch0=0,roll0=0;  
 double yaw=0,pitch=0,roll=0;  
 
+double dt; 
+    
 ofstream logfile;
 ofstream myfile;
+
+stringstream command;
 
 double pitch_error=0, pitch_error_old=0, pitch_derivative=0, pitch_output=0, pitch_integral=0;
 double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
@@ -64,30 +73,31 @@ void  Throttle(int motorID,int throttle){
   else if(motorID==S)S_t=throttle;
   else if(motorID==W)W_t=throttle;
   else if(motorID==E)E_t=throttle;
+
+  if(firstime==true){
+    gettimeofday(&start, NULL);
+    t0=start;
+    buff=start;
+    firstime=false;
+  }
+
   if(isMC==false){
-    pFile = fopen ("/dev/servoblaster","w");
-    fprintf(pFile,"%d=%d\n",motorID,throttle);
-    fclose(pFile);
+    //echo 0=1500 > /dev/servoblaster
+    command.str(""); command<<"echo "<<motorID<<"="<<throttle<<" > /dev/servoblaster"<<endl;
+    const char *char_command = command.str().c_str();
+    //cout<<char_command<<endl;
+    system(char_command);
+    //pFile = fopen ("/dev/servoblaster","w");
+    //fprintf(pFile,"%d=%d\n",motorID,throttle);
+    //fclose(pFile);
   }else{
     pFile = fopen ("servoblasterMC.txt","a");
     gettimeofday(&start, NULL);
-    if(firstime==true){
-      t0=start;
-      buff=start;
-      firstime=false;
-    }
     seconds  = start.tv_sec  - buff.tv_sec; useconds = start.tv_usec - buff.tv_usec;buff=start;
     mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5; 
     fprintf(pFile,"%d=%d %ld\n",motorID,throttle,mtime);
     fclose(pFile);
   }
-  if(printlog){
-    gettimeofday(&start, NULL);
-    seconds  = start.tv_sec-t0.tv_sec; useconds = start.tv_usec-t0.tv_usec;
-    mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5; 
-    logfile<<"to_plot: "<<roll<<" "<<pitch<<" "<<yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<" "<<mtime<<endl; 
-   }
-  usleep(10000);
 }
 
 void ThrottleAllplusplus(){
@@ -165,7 +175,11 @@ void RampingAll(int final_Throttle){
 }
 
 void  Stabilise(double timeS,double Kp,double Ki,double  Kd,int value_T){   // PID
-  double dt=timeS;
+
+  gettimeofday(&t_now, NULL);
+  seconds  = t_now.tv_sec  - t_old.tv_sec; useconds = t_now.tv_usec - t_old.tv_usec,t_old=t_now;
+  dt= ((seconds) * 1000 + useconds/1000.0) + 0.5;
+
   pitch_error      = fabs(pitch0 - pitch) > tolerance? pitch0 - pitch :0;
   pitch_integral   = pitch_integral + pitch_error*dt;
   pitch_derivative = (pitch_error - pitch_error_old)/dt;
