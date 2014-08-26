@@ -14,7 +14,7 @@
 
 void XYquad(){
   const int n = -N--1;	
-  float t[n],roll[n], pitch[n], yaw[n], N[n],S[n],E[n],W[n];
+  float t[n],roll[n], pitch[n], yaw[n], N[n],S[n],E[n],W[n],p_p[n],p_i[n],p_d[n];
   string text;
   ifstream data;
   string Kp,Ki,Kd;	
@@ -27,7 +27,7 @@ void XYquad(){
   int k = 0;
 
   while(!data.eof() && k<n){
-    data>>text>>roll[k]>>pitch[k]>>yaw[k]>>N[k]>>S[k]>>E[k]>>W[k]>>t[k];
+    data>>text>>roll[k]>>pitch[k]>>yaw[k]>>N[k]>>S[k]>>E[k]>>W[k]>>t[k]>>p_p[k]>>p_i[k]>>p_d[k];
     k++;
   }
   

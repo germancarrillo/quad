@@ -9,21 +9,24 @@ using namespace std;
 
 void StabiliseMPU(uint stabilizing_attemps,double Kp,double Ki,double  Kd){   // PID
   for(uint count=0; count<stabilizing_attemps; count++){
-    
-   double dt=1; 
-    
-    double pitch_error=0, pitch_error_old=0, pitch_derivative=0, pitch_output=0, pitch_integral=0;
-    double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
-    double yaw_error=0,   yaw_error_old=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
 
     while(loop_mpu(&yaw,&pitch,&roll)){
       if(fabs(pitch0 - pitch) > tolerance || fabs(roll0 - roll) > tolerance){
+
+	gettimeofday(&t_now, NULL);
+	seconds  = t_now.tv_sec  - t_old.tv_sec; 
+	useconds = t_now.tv_usec - t_old.tv_usec;
+	t_old=t_now;
+	dt= ((seconds) * 1000 + useconds/1000.0) + 0.5;
+
+	cout<< "dt = t_now=" << t_now.tv_sec << " - t_old= " << t_old.tv_sec <<" = dt ="<<dt<<endl;
+
 	pitch_error      = fabs(pitch0 - pitch) > tolerance? pitch0 - pitch :0;
 	pitch_integral   = pitch_integral + pitch_error*dt;
 	pitch_derivative = (pitch_error - pitch_error_old)/dt;
 	pitch_output     = int(Kp*pitch_error + Ki*pitch_integral + Kd*pitch_derivative);	
 	pitch_error_old  = pitch_error;
-
+	
 	roll_error      = fabs(roll0 - roll) > tolerance? roll0 - roll :0;
 	roll_integral   = roll_integral + roll_error*dt;
 	roll_derivative = (roll_error - roll_error_old)/dt;
@@ -161,9 +164,11 @@ bool loop_mpu(double *yaw,double *pitch,double *roll){
       if(printlog){
 	gettimeofday(&time_log, NULL);
 	seconds  = time_log.tv_sec - t0.tv_sec; useconds = time_log.tv_usec - t0.tv_usec;
-	cout<<"timelog: "<<time_log.tv_sec<<" "<<time_log.tv_usec<<endl;
-	mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5; 
-	logfile<<"to_plot: "<<*roll<<" "<<*pitch<<" "<<*yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<" "<<mtime<<endl; 
+	mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+	cout<<" PID= "<<Kp<<"*"<<pitch_error<<"+"<<Ki<<"*"<<pitch_integral<<"+"<<Kd<<"*"<<pitch_derivative<<endl; 
+	cout<<" intPID="<<int(Kp*pitch_error)<<"+"<<int(Ki*pitch_integral)<<"+"<<int(Kd*pitch_derivative)<<endl; 
+ 	logfile<<"to_plot: "<<*roll<<" "<<*pitch<<" "<<*yaw<<" "<<N_t<<" "<<S_t<<" "<<E_t<<" "<<W_t<<" "<<mtime<<" "
+	       <<" "<<int(Kp*pitch_error)<<" "<<int(Ki*pitch_integral)<<" "<<int(Kd*pitch_derivative)<<endl; 
       }
       return 1;
       #endif     
@@ -176,9 +181,9 @@ bool loop_mpu(double *yaw,double *pitch,double *roll){
 
 int main(int argc, char* argv[]){
   //PID variables
-  double Kp=0.10;
-  double Ki=0.00;
-  double Kd=0.00;
+  Kp=0.10;
+  Ki=0.00;
+  Kd=0.00;
   //-------------
 
   // Check the number of parameters
@@ -200,6 +205,7 @@ int main(int argc, char* argv[]){
   ThrottleAll(min_spin_T);
   ThrottleAll(take_off_T);
   
+  gettimeofday(&t_old, NULL);
   StabiliseMPU(50,Kp,Ki,Kd);
   
   ThrottleAll(min_spin_T);
