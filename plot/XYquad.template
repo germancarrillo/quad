@@ -3,6 +3,10 @@
 #include <iomanip>
 #include <vector>
 #include <string>
+#include "TGraph.h"   
+#include "TAxis.h"   
+#include "TCanvas.h"   
+
 #define min_plot 1580
 #define max_plot 1620
 #define min_plot_sum -200
@@ -33,17 +37,17 @@ void XYquad(){
     k++;
   }
   
-    TGraphErrors * grp_roll = new TGraph(n,t,roll);
-    TGraphErrors * grp_pitch = new TGraph(n,t,pitch);
-    TGraphErrors * grp_yaw = new TGraph(n,t,yaw);
-    TGraphErrors * grp_N = new TGraph(n,t,N);
-    TGraphErrors * grp_S = new TGraph(n,t,S);
-    TGraphErrors * grp_E = new TGraph(n,t,E);
-    TGraphErrors * grp_W = new TGraph(n,t,W);
+    TGraph * grp_roll = new TGraph(n,t,roll);
+    TGraph * grp_pitch = new TGraph(n,t,pitch);
+    TGraph * grp_yaw = new TGraph(n,t,yaw);
+    TGraph * grp_N = new TGraph(n,t,N);
+    TGraph * grp_S = new TGraph(n,t,S);
+    TGraph * grp_E = new TGraph(n,t,E);
+    TGraph * grp_W = new TGraph(n,t,W);
 
-    TGraphErrors * grp_p_p = new TGraph(n,t,p_p);
-    TGraphErrors * grp_p_i = new TGraph(n,t,p_i);
-    TGraphErrors * grp_p_d = new TGraph(n,t,p_d);
+    TGraph * grp_p_p = new TGraph(n,t,p_p);
+    TGraph * grp_p_i = new TGraph(n,t,p_i);
+    TGraph * grp_p_d = new TGraph(n,t,p_d);
     
     TCanvas * Ca0 = new TCanvas("Ca0","Canvas",1200,800);    
 
@@ -58,8 +62,8 @@ void XYquad(){
     grp_roll->GetXaxis()->SetTitle("t (ms)"); grp_roll->GetYaxis()->SetTitle("roll(degrees)");
     grp_roll->Draw("AP");
     */
-    Ca0_1->cd();
-    Ca0_1->SetGrid();
+    Ca0->cd(1);
+    Ca0->SetGrid(1);
     grp_pitch->SetTitle(title.c_str());  grp_pitch->SetLineColor(kRed);
     grp_pitch->SetMarkerStyle(20);  grp_pitch->SetMarkerSize(0.5);
     grp_pitch->SetMinimum(-angle_range);  grp_pitch->SetMaximum(angle_range);
@@ -76,8 +80,8 @@ void XYquad(){
     grp_E->Draw("AP");
     */
     
-    Ca0_3->cd();
-    Ca0_3->SetGrid();
+    Ca0->cd(3);
+    Ca0->SetGrid(3);
     grp_N->SetTitle("N");  grp_N->SetLineColor(kRed);
     grp_N->SetMarkerStyle(20);  grp_N->SetMarkerSize(0.5);
     grp_N->SetMinimum(min_plot);  grp_N->SetMaximum(max_plot);
@@ -96,8 +100,8 @@ void XYquad(){
     grp_W->Draw("AP");
     */
     
-    Ca0_5->cd();
-    Ca0_5->SetGrid();	
+    Ca0->cd(5);
+    Ca0->SetGrid(5);	
     grp_S->SetTitle("S");  grp_S->SetLineColor(kRed);
     grp_S->SetMarkerStyle(20);  grp_S->SetMarkerSize(0.5);
     grp_S->SetMinimum(min_plot);  grp_S->SetMaximum(max_plot);
@@ -106,8 +110,8 @@ void XYquad(){
     grp_S->Draw("AP");
 
     
-    Ca0_2->cd();
-    Ca0_2->SetGrid();
+    Ca0->cd(2);
+    Ca0->SetGrid(2);
     grp_p_p->SetTitle("P");  grp_p_p->SetLineColor(kRed);
     grp_p_p->SetMarkerStyle(20);  grp_p_p->SetMarkerSize(0.5);
     grp_p_p->SetMinimum(min_plot_sum);  grp_p_p->SetMaximum(max_plot_sum);
@@ -116,8 +120,8 @@ void XYquad(){
     grp_p_p->Draw("AP");
 
 
-    Ca0_4->cd();
-    Ca0_4->SetGrid();
+    Ca0->cd(4);
+    Ca0->SetGrid(4);
     grp_p_i->SetTitle("I");  grp_p_i->SetLineColor(kRed);
     grp_p_i->SetMarkerStyle(20);  grp_p_i->SetMarkerSize(0.5);
     grp_p_i->SetMinimum(min_plot_sum);  grp_p_i->SetMaximum(max_plot_sum);
@@ -125,8 +129,8 @@ void XYquad(){
     grp_p_i->GetXaxis()->SetTitle("t (ms)"); grp_p_i->GetYaxis()->SetTitle("I");
     grp_p_i->Draw("AP");
 
-    Ca0_6->cd();
-    Ca0_6->SetGrid();
+    Ca0->cd(6);
+    Ca0->SetGrid(6);
     grp_p_d->SetTitle("D");  grp_p_d->SetLineColor(kRed);
     grp_p_d->SetMarkerStyle(20);  grp_p_d->SetMarkerSize(0.5);
     grp_p_d->SetMinimum(min_plot_sum);  grp_p_d->SetMaximum(max_plot_sum);
@@ -137,7 +141,7 @@ void XYquad(){
 
     string image_name = "XYquad_Kp_"+Kp+"Ki_"+Ki+"Kd_"+Kd+".png";	
 
-    Ca0->SaveAs(image_name.c_str());
-    exit (0);
+  //Ca0->SaveAs(image_name.c_str());
+  //exit (0);
             
 }
