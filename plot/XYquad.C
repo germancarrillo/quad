@@ -7,19 +7,19 @@
 #include "TAxis.h"   
 #include "TCanvas.h"   
 
-#define min_plot 1580
-#define max_plot 1620
-#define min_plot_sum -200
-#define max_plot_sum 200
+#define min_plot 790
+#define max_plot 820 
+#define min_plot_sum -30
+#define max_plot_sum 30
 #define angle_range 20
-#define take_off_T 1630  // take-off Throttle
-#define min_spin_T 1610  // start-rotating-propellers 
-#define max_allowed_T 1660 // max-allowed Throttle
-#define TMIN 2739
-#define TMAX 21196
+#define take_off_T 790    // take-off Throttle
+#define min_spin_T 790    // start-rotating-propellers 
+#define max_allowed_T 820 // max-allowed Throttle
+#define TMIN 2239
+#define TMAX 21096
 
 void XYquad(){
-  const int n = 94-1;	
+  const int n = 157-1;	
   float t[n],roll[n], pitch[n], yaw[n], N[n],S[n],E[n],W[n],p_p[n],p_i[n],p_d[n];
   string text;
   ifstream data;

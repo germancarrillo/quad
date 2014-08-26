@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <cmath>
 #include <vector>
@@ -11,9 +12,20 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "giro/I2Cdev.h"
 #include "giro/MPU6050_6Axis_MotionApps20.h"
+
+#define S 0 //0
+#define W 1 //4
+#define E 2 //5
+#define N 3 //7
+
+#define printlog true
+#define PI 3.1415926
+
+#define OUTPUT_READABLE_YAWPITCHROLL
 
 MPU6050 mpu;
 
@@ -35,11 +47,58 @@ float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
 //
+//for time measurments                                                                                                                                                                   
+struct timeval start, end, buff,t0,start_mpu,end_mpu,time_log,t_now,t_old;
+long mtime, seconds, useconds;
+using namespace std;
+
+uint badFIFOcount=0;
+
+bool firstime=true;
+
+double N_t;
+double W_t;
+double E_t;
+double S_t;
+
+double Kp,Ki,Kd;
+bool ramping=false;
+
+double yaw0=0,pitch0=0,roll0=0;
+double yaw=0,pitch=0,roll=0;
+
+double dt;
+
+ofstream logfile;
+ofstream myfile;
+
+stringstream command;
+
+double pitch_error=0, pitch_error_old=0, pitch_derivative=0, pitch_output=0, pitch_integral=0;
+double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
+double yaw_error=0,   yaw_error_old=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
+
+FILE *pFile;
+
+// 
+// functions to setup/read devices  
+//
 bool setup_pwm();
 bool setup_orientaion();
 void setup_mpu();
 bool loop_mpu(double *yaw,double *pitch,double *roll);
-int  read_mpu();
 //
+// functions to setup/ramp and modify motors
+//
+void InitMotors();
+int  GetMeanThrottle();
+bool Valid_Throttle(int throttle);
+void Throttle(int motorID,int throttle);
+void ThrottleAll(int throttle);
+void StopMotors();
+void RampingAll(int final_Throttle);
+ 
+//
+void StabiliseQuad(uint stabilizing_attemps,double Kp,double Ki,double  Kd);
 
 #endif
