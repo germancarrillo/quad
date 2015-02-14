@@ -68,15 +68,18 @@ double yaw0=0,pitch0=0,roll0=0;
 double yaw=0,pitch=0,roll=0;
 
 double dt;
+double dt_old;
+double dt_oldd;
+double dt_olddd;
 
 ofstream logfile;
 ofstream myfile;
-
+ 
 stringstream command;
 
-double pitch_error=0, pitch_error_old=0, pitch_derivative=0, pitch_output=0, pitch_integral=0;
-double roll_error=0,  roll_error_old=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
-double yaw_error=0,   yaw_error_old=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
+double pitch_error=0, pitch_error_old=0, pitch_error_oldd=0, pitch_error_olddd=0, pitch_derivative=0, pitch_output=0, pitch_integral=0;
+double roll_error=0,  roll_error_old=0,  roll_error_oldd=0,  roll_error_olddd=0,  roll_derivative=0,  roll_output=0,  roll_integral=0;
+double yaw_error=0,   yaw_error_old=0,   yaw_error_oldd=0,   yaw_error_olddd=0,   yaw_derivative=0,   yaw_output=0,   yaw_integral=0;
 
 FILE *pFile;
 
@@ -90,15 +93,13 @@ bool loop_mpu(double *yaw,double *pitch,double *roll);
 //
 // functions to setup/ramp and modify motors
 //
-void InitMotors();
-int  GetMeanThrottle();
-bool Valid_Throttle(int throttle);
-void Throttle(int motorID,int throttle);
-void ThrottleAll(int throttle);
-void StopMotors();
-void RampingAll(int final_Throttle);
- 
+void  InitMotors();
+float GetMeanThrottle();
+float Valid_Throttle(float throttle);
+void  Throttle(int motorID,float throttle);
+void  ThrottleAll(float throttle);
+void  StopMotors();
 //
-void StabiliseQuad(uint stabilizing_attemps,double Kp,double Ki,double  Kd);
+void  StabiliseQuad(uint stabilizing_attemps,double Kp,double Ki,double  Kd);
 
 #endif

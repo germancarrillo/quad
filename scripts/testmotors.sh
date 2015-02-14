@@ -9,8 +9,8 @@
 echo  START 
 killall -e servod
 killall -e servod_new
-#/root/code/servoblaster/servod_new --cycle-time=5000us --step-size=2us --p1pins="7,15,16,22"
-/root/code/servoblaster/servod_new --cycle-time=5000us --step-size=2us --p1pins="7,22"
+#/root/code/servoblaster/servod --cycle-time=5000us --step-size=2us --p1pins="7,15,16,22"
+/root/code/servoblaster/servod --cycle-time=5000us --step-size=2us --p1pins="7,22"
 echo 0=0 > /dev/servoblaster
 echo 1=0 > /dev/servoblaster
 echo 2=0 > /dev/servoblaster

@@ -7,14 +7,12 @@
 #include "TAxis.h"   
 #include "TCanvas.h"   
 
-#define min_plot 790
-#define max_plot 820 
-#define min_plot_sum -30
-#define max_plot_sum 30
-#define angle_range 20
-#define take_off_T 790    // take-off Throttle
-#define min_spin_T 790    // start-rotating-propellers 
-#define max_allowed_T 820 // max-allowed Throttle
+#define min_plot 780
+#define max_plot 810 
+#define min_plot_sum -10
+#define max_plot_sum 10
+#define angle_range 45
+
 #define TMIN -TMIN-
 #define TMAX -TMAX-
 
@@ -49,7 +47,7 @@ void XYquad(){
     TGraph * grp_p_i = new TGraph(n,t,p_i);
     TGraph * grp_p_d = new TGraph(n,t,p_d);
     
-    TCanvas * Ca0 = new TCanvas("Ca0","Canvas",1200,800);    
+    TCanvas * Ca0 = new TCanvas("Ca0","Canvas",1800,1000);    
 
     Ca0->Divide(2,3);
     /*
@@ -59,7 +57,7 @@ void XYquad(){
     grp_roll->SetMarkerStyle(20);  grp_roll->SetMarkerSize(0.5);
     grp_roll->SetMinimum(-angle_range);  grp_roll->SetMaximum(angle_range);
     grp_roll->GetXaxis()->SetRangeUser(TMIN,TMAX);	
-    grp_roll->GetXaxis()->SetTitle("t (ms)"); grp_roll->GetYaxis()->SetTitle("roll(degrees)");
+    grp_roll->GetXaxis()->SetTitle("t (ms)"); grp_roll->GetYaxis()->SetTitle("roll [degrees]");
     grp_roll->Draw("AP");
     */
     Ca0->cd(1);
@@ -68,7 +66,7 @@ void XYquad(){
     grp_pitch->SetMarkerStyle(20);  grp_pitch->SetMarkerSize(0.5);
     grp_pitch->SetMinimum(-angle_range);  grp_pitch->SetMaximum(angle_range);
     grp_pitch->GetXaxis()->SetRangeUser(TMIN,TMAX);		
-    grp_pitch->GetXaxis()->SetTitle("t (ms)"); grp_pitch->GetYaxis()->SetTitle("pitch(degrees)");
+    grp_pitch->GetXaxis()->SetTitle("t (ms)"); grp_pitch->GetYaxis()->SetTitle("pitch [degrees]");
     grp_pitch->Draw("AP");
     /*
     Ca0_3->cd();
@@ -76,7 +74,7 @@ void XYquad(){
     grp_E->SetTitle("E");  grp_E->SetLineColor(kRed);
     grp_E->SetMarkerStyle(20);  grp_E->SetMarkerSize(0.5);
     grp_E->SetMinimum(min_plot);  grp_E->SetMaximum(max_plot);
-    grp_E->GetXaxis()->SetTitle("t (ms)"); grp_E->GetYaxis()->SetTitle("E(pulse)");
+    grp_E->GetXaxis()->SetTitle("t (ms)"); grp_E->GetYaxis()->SetTitle("Motor E (pulse) [#mus]/2");
     grp_E->Draw("AP");
     */
     
@@ -86,7 +84,7 @@ void XYquad(){
     grp_N->SetMarkerStyle(20);  grp_N->SetMarkerSize(0.5);
     grp_N->SetMinimum(min_plot);  grp_N->SetMaximum(max_plot);
     grp_N->GetXaxis()->SetRangeUser(TMIN,TMAX);	
-    grp_N->GetXaxis()->SetTitle("t (ms)"); grp_N->GetYaxis()->SetTitle("N(pulse)");
+    grp_N->GetXaxis()->SetTitle("t (ms)"); grp_N->GetYaxis()->SetTitle("Motor N (pulse) [#mus]/2");
     grp_N->Draw("AP");
 
     /*
@@ -96,7 +94,7 @@ void XYquad(){
     grp_W->SetMarkerStyle(20);  grp_W->SetMarkerSize(0.5);
     grp_W->SetMinimum(min_plot);  grp_W->SetMaximum(max_plot);
     grp_W->GetXaxis()->SetRangeUser(TMIN,TMAX);	
-    grp_W->GetXaxis()->SetTitle("t (ms)"); grp_W->GetYaxis()->SetTitle("W(pulse)");
+    grp_W->GetXaxis()->SetTitle("t (ms)"); grp_W->GetYaxis()->SetTitle("Motor W (pulse) [#mus]/2");
     grp_W->Draw("AP");
     */
     
@@ -106,7 +104,7 @@ void XYquad(){
     grp_S->SetMarkerStyle(20);  grp_S->SetMarkerSize(0.5);
     grp_S->SetMinimum(min_plot);  grp_S->SetMaximum(max_plot);
     grp_S->GetXaxis()->SetRangeUser(TMIN,TMAX);		
-    grp_S->GetXaxis()->SetTitle("t (ms)"); grp_S->GetYaxis()->SetTitle("S(pulse)");
+    grp_S->GetXaxis()->SetTitle("t (ms)"); grp_S->GetYaxis()->SetTitle("Motor S (pulse) [#mus]/2");
     grp_S->Draw("AP");
 
     
